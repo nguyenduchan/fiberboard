@@ -1,0 +1,42 @@
+# --- OS / editor ---
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+*~
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
+.venv/
+venv/
+.env
+.env.*
+
+# --- KiCad local / cache (regenerated on open) ---
+fp-info-cache
+*.kicad_prl
+*.lck
+*-backups/
+_autosave-*
+*.kicad_sch-bak
+*.kicad_pcb-bak
+*.kicad_pro-bak
+
+# KiCad local history (may contain nested .git)
+**/.history/
+
+# --- KiCad tool reports (regenerate with kicad-cli / checks) ---
+pcb/erc.rpt
+pcb/drc.rpt
+pcb/**/*-erc.rpt
+pcb/**/*-drc.rpt
+
+# --- Exports (Gerber, SVG, netlist from KiCad CLI — not source of truth) ---
+pcb/exports/
+pcb/*.pdf
+
+# --- Optional one-off debug dumps (regenerate from scripts) ---
+pcb/scripts/dump_*.py

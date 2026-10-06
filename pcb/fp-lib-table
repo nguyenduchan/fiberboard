@@ -1,0 +1,4 @@
+(fp_lib_table
+  (version 7)
+  (lib (name "Fiberboard")(type "KiCad")(uri "${KIPRJMOD}/libraries/Fiberboard.pretty")(options "")(descr "Fiberboard local footprints"))
+)

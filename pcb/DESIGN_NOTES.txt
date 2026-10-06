@@ -1,0 +1,75 @@
+Fiberboard AIO Logic (No Nema) — Design Notes
+===========================================
+
+Variant: Pure logic / DC pump / feeder / foreign-body alarm / mini filler
+
+MCU
+- ESP32-DevKitC on U1 female socket (USB program on DevKit)
+
+Power (24V IN — mandatory protection at domino)
+- J1 VIN 9-24Vdc ->
+  F1 PPTC MF-MSMF350 (3.5A hold, 24V) ->
+  D7 TVS SMAJ28A (bidirectional clamp ~28V) ->
+  Q12 AO4407A P-FET high-side anti-reverse (low drop vs Schottky) ->
+  C4 470uF + C14/C15 100nF bulk/filter ->
+  Buck U2 XL1509-5 (C16/C17 in, D8 SS34, L1 47uH, C2/C5 out, R36/R37 FB) -> +5V
+  LDO U3 AMS1117-3.3 (C7 in, C3/C18 out) -> +3V3 for ESP32 & logic
+  +5V also: DevKit pin19, relays, RS485, IR LED TX ; solenoid load uses +24V rail
+
+Assembly: SMD-first (0805/1206, SOIC, SOT, SMD relay G6KU, PC817 SO-4). Field screw terminals and AFBR Versatile Link are through-hole by part type.
+
+PCB size / JLCPCB / enclosure
+- Board 172×98 mm for PLC ABS box 179×100×48 mm (Shopee; internal ~172×98 mm).
+- JLCPCB: 2-layer 1.6 mm FR4; panel ~1.7 cm² (wider than 100 mm → not $2 promo).
+- Mount: standoffs in PLC shell; side keepout 3 mm.
+
+Fiber optic (2ch) — integrated Versatile Link on PCB (1 mm POF)
+-------------------------------------------------------------
+  TX AFBR-1624Z (F1T/F2T) + RX AFBR-2624Z (F1R/F2R) per channel, front row (signal side)
+  IO32/IO33 PWM -> transmitter | receiver TTL -> IO4/IO15
+  No external amplifier; removed fiber clamp terminals J2/J11
+
+GPIO
+- IO32 FIBER1_PWM, IO33 FIBER2_PWM
+- IO4  FIBER1_DIG, IO15 FIBER2_DIG
+- IO25 FOOT, IO26 NPN
+- IO27 RELAY1, IO14 RELAY2, IO13 MOSFET
+- IO16/17 RS485, IO21/22 I2C OLED
+
+Other I/O
+- 2x G5LE-1 relays COM/NO/NC, MOSFET solenoid, RS485, OLED header
+- Flyback diodes D3/D4/D5: cathode to supply rail, anode to switched end
+
+Ground (split plane)
+- GND_PWR: domino return, 24V/buck (U2, D8), bulk C4 (-), relay drivers, solenoid AO3400A, NPN field GND (J4-3)
+- GND: ESP32, 3.3V/LDO, fiber, optos, RS485, OLED, +5V output caps
+- Single star: C4 negative + NT1 (NetTie) — only place the two grounds meet on copper
+
+PCB layout (172 x 98 mm, side keepout 3 mm)
+- Front face = bottom edge, one row: J1 J5 J6 J7 | F1T F1R F2T F2R J3 J4 J8 J9 (split GND ~62 mm)
+- Interior above connectors: POWER / FIBER_DECAP / MCU / INPUTS / RS485 / UI / POWER_STAGE
+Silkscreen text = user I/O guidance on connector row; designators on F.Fab.
+
+PCB workflow
+1. Open pcb/fiberboard-logic.kicad_pro
+2. Route (ratsnest shows all nets), refill GND and GND_PWR pours (star at NT1 beside C4)
+
+Fiber (2 channels) — on-board Versatile Link (no external amplifier)
+====================================================================
+Parts (per channel):
+  TX: AFBR-1624Z  (650 nm LED + driver, TTL in, 3.3/5 V)
+  RX: AFBR-2624Z  (PIN + digitizer, TTL out, 3.3/5 V)
+Fiber: 1 mm plastic optical fiber (POF), plug into module on front connector row (right side).
+
+Wiring:
+  ESP32 IO32/IO33 LEDC PWM -> F1T/F2T DATA_IN (optical power / modulation)
+  F1R/F2R DATA_OUT -> ESP32 IO4 / IO15 (digital receive)
+  +5 V + 100 nF local decoupling per channel (C12/C13)
+  Footprint: Broadcom horizontal Versatile Link DIP (2.54 mm pitch, 7.62 mm rows) — see AV02-4369EN
+
+GPIO:
+  IO32 FIBER1_PWM   IO33 FIBER2_PWM
+  IO4  FIBER1_DIG   IO15 FIBER2_DIG
+  (IO34/IO35 ADC unused — no discrete analog front-end)
+
+Alternates (same footprint family): AFBR-1629Z / AFBR-2529Z (inverted logic).
