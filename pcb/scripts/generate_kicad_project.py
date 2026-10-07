@@ -17,17 +17,17 @@ from build_connected import (  # noqa: E402
     pad_net_table,
 )
 from connectivity import build_logic_design  # noqa: E402
-from fiber_circuit import FIBER_NOTES  # noqa: E402
+from assembly_groups import assembly_group  # noqa: E402
 from pcb_layout import (  # noqa: E402
     BOARD_H,
     BOARD_W,
     DIN_RAIL_INSET,
-    FRONT_IO_SPLIT,
     ZONES,
     build_layout,
     ground_pour_polygons,
     group_sexpr,
     postprocess_footprint,
+    zone_group,
 )
 from symbols_pcb_matched import (  # noqa: E402
     all_symbols_for_lib,
@@ -296,6 +296,11 @@ def make_esp32_socket_footprint() -> str:
 \t\t(uuid "{uid()}")
 \t)'''
         )
+    # DevKitC V4 (Espressif): bo 54.4×27.9 mm. Chân 1 (3V3) ở đầu ăng-ten, USB ở −Y.
+    # 5.9 mm từ mép ăng-ten tới tâm chân 1; 45.72 mm giữa chân 1 và chân 19; phần còn lại tới mép USB.
+    # WROOM-32: ăng-ten PCB 18×6.5 mm nằm ở mép đó (không tính vào courtyard đế).
+    ant_y1 = 5.9
+    ant_y0 = ant_y1 - 6.5
     silk = f'''\t(fp_rect
 \t\t(start -15.5 2.5)
 \t\t(end 15.5 -48.26)
@@ -306,6 +311,45 @@ def make_esp32_socket_footprint() -> str:
 \t\t(fill none)
 \t\t(layer "F.SilkS")
 \t\t(uuid "{uid()}")
+\t)
+\t(fp_rect
+\t\t(start -15.5 2.5)
+\t\t(end 15.5 -48.26)
+\t\t(stroke
+\t\t\t(width 0.05)
+\t\t\t(type default)
+\t\t)
+\t\t(fill none)
+\t\t(layer "F.CrtYd")
+\t\t(uuid "{uid()}")
+\t)
+\t(fp_rect
+\t\t(start -9.0 {ant_y0})
+\t\t(end 9.0 {ant_y1})
+\t\t(stroke
+\t\t\t(width 0.2)
+\t\t\t(type default)
+\t\t)
+\t\t(fill none)
+\t\t(layer "F.SilkS")
+\t\t(uuid "{uid()}")
+\t)
+\t(fp_line
+\t\t(start -9.0 {ant_y0})
+\t\t(end 9.0 {ant_y1})
+\t\t(stroke (width 0.12) (type default))
+\t\t(layer "F.SilkS")
+\t\t(uuid "{uid()}")
+\t)
+\t(fp_line
+\t\t(start 9.0 {ant_y0})
+\t\t(end -9.0 {ant_y1})
+\t\t(stroke (width 0.12) (type default))
+\t\t(layer "F.SilkS")
+\t\t(uuid "{uid()}")
+\t)
+\t(fp_text user "Ăng-ten 18×6.5" (at 0 {(ant_y0 + ant_y1) / 2:.2f} 0) (layer "F.Fab") (uuid "{uid()}")
+\t\t(effects (font (size 0.7 0.7) (thickness 0.1)))
 \t)
 \t(fp_text reference "U1" (at 0 4.5 0) (layer "F.SilkS") (uuid "{uid()}")
 \t\t(effects (font (size 1 1) (thickness 0.15)))
@@ -321,7 +365,7 @@ def make_esp32_socket_footprint() -> str:
 \t(generator "fiberboard_gen")
 \t(generator_version "1.0")
 \t(layer "F.Cu")
-\t(descr "Female pin socket for ESP32-DevKitC / NodeMCU-32S style module")
+\t(descr "Female pin socket for ESP32-DevKitC-32E, 2x19, row spacing 25.4 mm")
 \t(tags "esp32 socket header")
 \t(property "Reference" "U1"
 \t\t(at 0 5.5 0)
@@ -917,6 +961,7 @@ def build_pcb() -> str:
     )
 
     footprints = []
+    fp_group_members: dict[str, list[str]] = {}
     for p in placements:
         c = comps[p.ref]
         try:
@@ -924,14 +969,17 @@ def build_pcb() -> str:
             sexpr = postprocess_footprint(sexpr, p.rot)
             sexpr = inject_nets_into_footprint(sexpr, p.ref, pad_nets)
             fp_uuid = re.search(r'^\t\t\(uuid "([^"]+)"\)', sexpr, re.M).group(1)
-            for z in ZONES:
-                if p.ref in z.refs:
-                    zone_members[z.name].append(fp_uuid)
+            fp_group_members.setdefault(assembly_group(p.ref), []).append(fp_uuid)
             footprints.append(sexpr)
         except Exception as exc:
             print(f"WARN footprint {p.ref} {c.footprint}: {exc}")
 
-    groups = [group_sexpr(name, members) for name, members in zone_members.items()]
+    # KiCad groups: footprint UUIDs only (no silk/gr_rect — those break the PCB editor).
+    groups = [
+        group_sexpr(name, members)
+        for name, members in sorted(fp_group_members.items())
+        if members
+    ]
     net_decl = ""
     tracks = "\n".join(graphics + groups)
 
@@ -1168,68 +1216,12 @@ def main():
     pcb = build_pcb()
     (ROOT / f"{PROJECT}.kicad_pcb").write_text(pcb, encoding="utf-8")
 
-    # Design notes as text (not markdown README unless needed)
-    notes = ROOT / "DESIGN_NOTES.txt"
-    notes.write_text(
-        f"""Fiberboard AIO Logic (No Nema) — Design Notes
-===========================================
-
-Variant: Pure logic / DC pump / feeder / foreign-body alarm / mini filler
-
-MCU
-- ESP32-DevKitC on U1 female socket (USB program on DevKit)
-
-Power (24V IN — mandatory protection at domino)
-- J1 VIN 9-24Vdc ->
-  F1 PPTC MF-MSMF350 (3.5A hold, 24V) ->
-  D7 TVS SMAJ28A (bidirectional clamp ~28V) ->
-  Q12 AO4407A P-FET high-side anti-reverse (low drop vs Schottky) ->
-  C4 470uF + C14/C15 100nF bulk/filter ->
-  Buck U2 XL1509-5 (C16/C17 in, D8 SS34, L1 47uH, C2/C5 out, R36/R37 FB) -> +5V
-  LDO U3 AMS1117-3.3 (C7 in, C3/C18 out) -> +3V3 for ESP32 & logic
-  +5V also: DevKit pin19, relays, RS485, IR LED TX ; solenoid load uses +24V rail
-
-Assembly: SMD-first (0805/1206, SOIC, SOT, SMD relay G6KU, PC817 SO-4). Field screw terminals and AFBR Versatile Link are through-hole by part type.
-
-PCB size / JLCPCB / enclosure
-- Board {BOARD_W:.0f}×{BOARD_H:.0f} mm for PLC ABS box 179×100×48 mm (Shopee; internal ~172×98 mm).
-- JLCPCB: 2-layer 1.6 mm FR4; panel ~{BOARD_W*BOARD_H/10000:.1f} cm² (wider than 100 mm → not $2 promo).
-- Mount: standoffs in PLC shell; side keepout {DIN_RAIL_INSET:.0f} mm.
-
-Fiber optic (2ch) — integrated Versatile Link on PCB (1 mm POF)
--------------------------------------------------------------
-  TX AFBR-1624Z (F1T/F2T) + RX AFBR-2624Z (F1R/F2R) per channel, front row (signal side)
-  IO32/IO33 PWM -> transmitter | receiver TTL -> IO4/IO15
-  No external amplifier; removed fiber clamp terminals J2/J11
-
-GPIO
-- IO32 FIBER1_PWM, IO33 FIBER2_PWM
-- IO4  FIBER1_DIG, IO15 FIBER2_DIG
-- IO25 FOOT, IO26 NPN
-- IO27 RELAY1, IO14 RELAY2, IO13 MOSFET
-- IO16/17 RS485, IO21/22 I2C OLED
-
-Other I/O
-- 2x G5LE-1 relays COM/NO/NC, MOSFET solenoid, RS485, OLED header
-- Flyback diodes D3/D4/D5: cathode to supply rail, anode to switched end
-
-Ground (split plane)
-- GND_PWR: domino return, 24V/buck (U2, D8), bulk C4 (-), relay drivers, solenoid AO3400A, NPN field GND (J4-3)
-- GND: ESP32, 3.3V/LDO, fiber, optos, RS485, OLED, +5V output caps
-- Single star: C4 negative + NT1 (NetTie) — only place the two grounds meet on copper
-
-PCB layout ({BOARD_W:.0f} x {BOARD_H:.0f} mm, side keepout {DIN_RAIL_INSET:.0f} mm)
-- Front face = bottom edge, one row: J1 J5 J6 J7 | F1T F1R F2T F2R J3 J4 J8 J9 (split GND ~{FRONT_IO_SPLIT:.0f} mm)
-- Interior above connectors: POWER / FIBER_DECAP / MCU / INPUTS / RS485 / UI / POWER_STAGE
-Silkscreen text = user I/O guidance on connector row; designators on F.Fab.
-
-PCB workflow
-1. Open pcb/fiberboard-logic.kicad_pro
-2. Route (ratsnest shows all nets), refill GND and GND_PWR pours (star at NT1 beside C4)
-"""
-        + FIBER_NOTES,
-        encoding="utf-8",
-    )
+    # DESIGN_NOTES.txt and PWR_24V_PROTECT_BUCK_GUIDE.txt are maintained in repo (not overwritten here).
+    pcb_path = ROOT / f"{PROJECT}.kicad_pcb"
+    if pcb_path.exists() and "(segment" not in pcb_path.read_text(encoding="utf-8"):
+        print(
+            "NOTE: PCB has footprints only (no copper). KiCad DRC will report unconnected until you route."
+        )
     print(f"Generated project in {ROOT}")
 
 

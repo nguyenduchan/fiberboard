@@ -27,7 +27,7 @@
 			(hide yes)
 			(effects (font (size 1.27 1.27)))
 		)
-		(property "Description" "ESP32-DevKitC socket, pin geometry matches PCB footprint"
+		(property "Description" "ESP32-DevKitC-32E socket, pin order matches Espressif J2/J3"
 			(at 0 0 0)
 			(hide yes)
 			(effects (font (size 1.27 1.27)))
@@ -176,20 +176,20 @@
 					(effects (font (size 1.27 1.27)))
 				)
 			)
-			(pin power_in line
+			(pin bidirectional line
 				(at -15.24 -30.48 0)
 				(length 2.54)
-				(name "GND"
+				(name "IO12"
 					(effects (font (size 1.27 1.27)))
 				)
 				(number "13"
 					(effects (font (size 1.27 1.27)))
 				)
 			)
-			(pin bidirectional line
+			(pin power_in line
 				(at -15.24 -33.02 0)
 				(length 2.54)
-				(name "IO12"
+				(name "GND"
 					(effects (font (size 1.27 1.27)))
 				)
 				(number "14"
@@ -629,7 +629,7 @@
 			(at 0 0 0)
 			(effects (font (size 1.27 1.27)))
 		)
-		(property "Footprint" "TerminalBlock_Phoenix:TerminalBlock_Phoenix_MKDS-1,5-2-5.08_1x02_P5.08mm_Horizontal"
+		(property "Footprint" "Fiberboard:Terminal_2EDG5.08-1x02_P5.08mm_Horizontal"
 			(at 0 0 0)
 			(hide yes)
 			(effects (font (size 1.27 1.27)))
@@ -696,7 +696,7 @@
 			(at 0 0 0)
 			(effects (font (size 1.27 1.27)))
 		)
-		(property "Footprint" "TerminalBlock_Phoenix:TerminalBlock_Phoenix_MKDS-1,5-3-5.08_1x03_P5.08mm_Horizontal"
+		(property "Footprint" "Fiberboard:Terminal_2EDG5.08-1x03_P5.08mm_Horizontal"
 			(at 0 0 0)
 			(hide yes)
 			(effects (font (size 1.27 1.27)))
@@ -1325,6 +1325,94 @@
 					(effects (font (size 1.27 1.27)))
 				)
 				(number "2"
+					(effects (font (size 1.27 1.27)))
+				)
+			)
+		)
+	)
+	(symbol "CM_Choke_4"
+		(pin_names
+			(offset 1.016)
+		)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(property "Reference" "L"
+			(at 0 0 0)
+			(effects (font (size 1.27 1.27)))
+		)
+		(property "Value" "CM_Choke_4"
+			(at 0 0 0)
+			(effects (font (size 1.27 1.27)))
+		)
+		(property "Footprint" "Inductor_SMD:L_CommonModeChoke_Coilank_ACM2012"
+			(at 0 0 0)
+			(hide yes)
+			(effects (font (size 1.27 1.27)))
+		)
+		(property "Datasheet" ""
+			(at 0 0 0)
+			(hide yes)
+			(effects (font (size 1.27 1.27)))
+		)
+		(property "Description" "Common-mode choke V+/GND return"
+			(at 0 0 0)
+			(hide yes)
+			(effects (font (size 1.27 1.27)))
+		)
+		(property "ki_keywords" "Filter"
+			(at 0 0 0)
+			(hide yes)
+			(effects (font (size 1.27 1.27)))
+		)
+
+		(symbol "CM_Choke_4_0_1"
+			(rectangle
+				(start -5.08 3.81)
+				(end 5.08 -3.81)
+				(stroke (width 0.254) (type default))
+				(fill (type background))
+			)
+			(text "CM" (at 0 0 0) (effects (font (size 1.27 1.27))))
+		)
+		(symbol "CM_Choke_4_1_1"
+			(pin passive line
+				(at -7.62 2.54 0)
+				(length 2.54)
+				(name "1"
+					(effects (font (size 1.27 1.27)))
+				)
+				(number "1"
+					(effects (font (size 1.27 1.27)))
+				)
+			)
+			(pin passive line
+				(at -7.62 -2.54 0)
+				(length 2.54)
+				(name "2"
+					(effects (font (size 1.27 1.27)))
+				)
+				(number "2"
+					(effects (font (size 1.27 1.27)))
+				)
+			)
+			(pin passive line
+				(at 7.62 2.54 180)
+				(length 2.54)
+				(name "3"
+					(effects (font (size 1.27 1.27)))
+				)
+				(number "3"
+					(effects (font (size 1.27 1.27)))
+				)
+			)
+			(pin passive line
+				(at 7.62 -2.54 180)
+				(length 2.54)
+				(name "4"
+					(effects (font (size 1.27 1.27)))
+				)
+				(number "4"
 					(effects (font (size 1.27 1.27)))
 				)
 			)

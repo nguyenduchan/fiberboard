@@ -1,0 +1,224 @@
+Cấu hình nguồn 24 V + buck + công suất + mass (Fiberboard và tái sử dụng)
+===========================================================================
+Phiên bản: Fiberboard logic — mức 1 (lọc CM/MOV/tụ giữ áp, không DC-DC cách ly).
+Nguồn vào domino 9–24 VDC. Nguồn ngoài: 24 VDC ≥ 1,5–2 A (ray DIN công nghiệp).
+Danh sách mạng: pcb/scripts/connectivity.py | Bố trí: pcb/scripts/pcb_layout.py
+
+
+0. Yêu cầu môi trường (máy dập / băng chuyền) — cấu hình áp dụng
+-----------------------------------------------------------------
+| Hạng mục | Cấu hình trên bo / tủ |
+|----------|----------------------|
+| Nguồn vào | 9–24 VDC qua J1; nguồn 24 V ≥ 1,5–2 A, có bảo vệ quá dòng |
+| Xung nhiễu VIN | F1 cầu chì 5×20 (thay tay), L2 lọc CM, RV1 MOV, D7 TVS, C19/C15 tần số cao, Q12 chống ngược, C4 1000 µF giữ áp |
+| Mass | Tách GND_PWR / GND logic; nối sao NT1 + D11 ‖ C23 + FB3 (không nhánh mass song song dọc bo) |
+| Buck / logic | XL1509 + ferrite FB2; AMS1117 + FB1; không đi dây SW/L1 dưới ESP32 |
+| Đầu ra công suất | +5V_RLY (FB4, F2, D12, C24/C25) → relay; +24V_SOL (F3) → van; flyback D3/D4/D5 |
+| Đầu vào hiện trường | Opto PC817 FOOT/NPN (không nối trực tiếp 24 V vào GPIO) |
+| RS485 | TVS D9/D10 SMAJ5.0A trên A/B; R15 100 Ω; cáp xoắt + mass; bọc chắn một đầu |
+| Vỏ / lắp | Hộp PLC ~179×100×48 mm; PCB 172×98 mm; dây nguồn xoắn; tách cáp motor/biến tần |
+| Tham chiếu EMI | IEC 61000-6-2 (bố trí dây, đất vỏ, nguồn) |
+| An toàn chức năng | Dừng khẩn, cửa, SIL/PL — phần cứng an toàn riêng (ISO 13849, IEC 60204-1); bo chỉ logic |
+| Không có | DC-DC cách ly VIN; không snubber relay trên bo (tải cảm lớn: xử lý tại tải) |
+
+
+1. Sơ đồ khối điện
+------------------
+  J1 VIN+ / VIN-
+    → F1 giá cầu chì 5×20 mm (ống thủy tinh, thay bằng tay)
+    → L2 lọc CM (V+ và mass về domino)
+    → RV1 MOV ‖ D7 TVS ‖ C19 (+ C15 tần số cao)
+    → Q12 P-FET chống ngược
+    → C4 1000 µF 25 V (+ C14 tần số cao)
+    → U2 XL1509 → +5V_RAW → FB2 → +5V (+ C22)
+    → U3 AMS1117 → FB1 → +3V3
+
+  Mass:
+    GND_PWR: mass về domino, buck, cực âm bulk C4, driver relay/van, mass +5V_RLY (cực âm D12)
+    GND logic: ESP32, opto, IC RS485, tụ rail logic
+    NT1 chân 1 = GND_PWR; NT1 chân 2 = GND_SPLICE
+    D11 TVS ‖ C23 100nF: GND_PWR ↔ GND_SPLICE
+    FB3: GND_SPLICE → GND (logic)
+
+  Nhánh công suất (dòng nhỏ):
+    +5V → FB4 → F2 cầu chì 5×20 F0,5 A → +5V_RLY (+ D12 TVS, C24/C25) → cuộn G6KU K1/K2
+    +24V → F3 cầu chì 5×20 F0,25 A → +24V_SOL → J7 van (+ D5 flyback)
+
+  Không thuộc khối nguồn (trên bo I/O): opto PC817, TVS RS485 D9/D10, flyback D3/D4 relay.
+
+
+2. Layout PCB — thứ tự cột (trái → phải)
+----------------------------------------
+  | PWR_24V_PROTECT | PWR_BUCK | PWR_24V_OUT | MCU_SIGNAL |
+
+  Cột bảo vệ — hai ô silk, một nhóm KiCad PWR_24V_PROTECT:
+    Lọc 24V vào:     F1, L2, Q12, RV1, D7, C19, C15, R17
+    Bulk / nối mass*: C4, C14, NT1, D11, C23, FB3
+
+  PWR_BUCK:        U2, L1, D8, C2, C22, U3, C16/C17, C7/C3, FB2, FB4, FB1, R36–R38, C5/C18/C21
+  PWR_24V_OUT:     F2, D12, C24/C25, K1/K2 + driver, F3 + Q5 solenoid + D5
+  MCU_SIGNAL:      U1, U7, U5/U6, linh kiện thụ động RS485, D6, C12/C13
+
+  Pour đồng:
+    GND_PWR: cột trái đến trước MCU_SIGNAL (bảo vệ + buck + công suất) + dải dưới J1/J5–J7
+    GND:     cột MCU_SIGNAL + I/O phải (từ LOGIC_X0)
+    Nối GND_PWR ↔ GND logic: chỉ tại NT1 (+ D11/C23/FB3 trên mạch sao)
+
+  PCB Fiberboard: 172×98 mm; hàng domino mép dưới: J1 J5 J6 J7 | F1T–F2R J3 J4 J8.
+
+  Thông số script pcb_layout.py (cột bên trong, mm):
+    BOARD_W×BOARD_H = 172×98; DIN_RAIL_INSET = 3; INTERIOR_COL_GAP = 1
+    PROTECT_COL_W = 34 | BUCK_COL_W = 36 | PWR_OUT_COL_W = 41
+    LOGIC_X0 = mép trái cột MCU_SIGNAL; POWER_ZONE_W = LOGIC_X0 − XI0 (pour GND_PWR)
+    GROUP_ALIAS: PWR_24V_PROTECT_IN / PWR_24V_PROTECT_BULK → PWR_24V_PROTECT
+    Ô silk trong bảo vệ: ~38% chiều cao (vào) / ~48% (bulk/nối mass*)
+    FRONT_IO_SPLIT ≈ 66 mm giữa domino nguồn/công suất (J1–J7) và I/O tín hiệu (phải)
+
+
+2b. I/O tín hiệu và bảo vệ (MCU_SIGNAL — connectivity.py)
+---------------------------------------------------------
+| Chức năng | Linh kiện / quy tắc |
+|-----------|---------------------|
+| FOOT / NPN | U5/U6 PC817; GPIO sau opto IO25/IO26 |
+| Driver relay | Q3/Q4 2N3904; cuộn từ +5V_RLY; D3/D4 flyback |
+| Solenoid | Q5 AO3400A cắt mass phía âm; J7-1 +24V_SOL; D5 flyback |
+| RS485 | U7 MAX485; D9/D10 SMAJ5.0A; R18/R19; R15 100 Ω; DE/RE IO17 |
+| Quang 2 kênh | AFBR-1624Z phát / AFBR-2624Z thu; C12/C13 100 nF/kênh; IO32/33 PWM, IO4/15 số |
+| Trạng thái | LED SMD; không header OLED trên bo |
+
+
+3. Danh sách linh kiện — bảo vệ 24 V (PWR_24V_PROTECT)
+------------------------------------------------------
+| Ref | Giá trị              | Footprint / ghi chú           |
+|-----|----------------------|-------------------------------|
+| F1  | Giá 5×20 + F4A/250V  | Footprint Fuseholder_5x20mm_Horizontal; nhanh F4A (hoặc T3,15A nếu muốn chậm) |
+| L2  | CM ACM2012           | 4 chân, lọc CM                |
+| RV1 | MOV ~26 V            | Varistor VF                   |
+| D7  | TVS SMAJ28A          | SMA                           |
+| C19 | 10 µF 25 V           | 0805                          |
+| C15 | 100 nF               | 0805                          |
+| Q12 | AO4407A              | SOT-23, high-side             |
+| R17 | 100 kΩ               | 0805, cổng Q12                |
+| C4  | 1000 µF 25 V         | CP_Elec 10×12,5               |
+| C14 | 100 nF               | 0805                          |
+| NT1 | NetTie 2             | Pad1 GND_PWR                  |
+| D11 | TVS SMAJ5.0A         | GND_PWR ↔ GND_SPLICE          |
+| C23 | 100 nF               | 0805, song song D11 (gộp mã 100 nF) |
+| FB3 | BLM21PG121           | GND_SPLICE → GND logic        |
+
+
+4. Danh sách linh kiện — buck và LDO (PWR_BUCK)
+-----------------------------------------------
+| Ref  | Giá trị           | Ghi chú                          |
+|------|-------------------|----------------------------------|
+| U2   | XL1509-5.0        | TO-263-5; Vin 8–40 V             |
+| C16  | 10 µF             | Vin buck                         |
+| C17  | 100 nF            | Vin buck                         |
+| D8   | SS34              | SW → GND_PWR                     |
+| L1   | 47 µH             | 1210                             |
+| C2   | 220 µF 6,3–10 V   | Đầu ra buck                      |
+| C5   | 100 nF            | Tần số cao 5 V thô               |
+| R36  | 3 kΩ              | FB (XL1509-5.0 cố định 5 V)      |
+| R37  | 1 kΩ              | FB → GND_PWR                     |
+| R38  | 10 kΩ             | Kéo EN lên Vin                   |
+| FB2  | BLM21PG121        | +5V_RAW → +5V                    |
+| C22  | 220 µF 6,3–10 V   | Sau FB2, rail +5V logic          |
+| FB4  | BLM21PG121        | +5V → nhánh relay                |
+| U3   | AMS1117-3.3       | SOT-223                          |
+| C7   | 10 µF             | Vào LDO                          |
+| C3   | 22 µF             | 3,3 V                            |
+| C18  | 100 nF            | Tần số cao 3,3 V                 |
+| FB1  | BLM21PG121        | +3V3                             |
+| C21  | 100 nF            | Sau FB1                          |
+
+
+5. Danh sách linh kiện — công suất (PWR_24V_OUT)
+------------------------------------------------
+| Ref | Giá trị                 | Ghi chú                         |
+|-----|-------------------------|---------------------------------|
+| FB4 | (đặt tại buck)          | Xem mục 4                       |
+| F2  | Giá 5×20 + F0,5A/250V   | Nhánh relay; thay ống khi đứt, không sửa PCB |
+| D12 | TVS SMAJ5.0A            | +5V_RLY → GND_PWR               |
+| C24 | 220 µF 6,3–10 V         | CP_Elec 6,3×5,4 (cùng C2/C22)   |
+| C25 | 100 nF                  | Tần số cao                      |
+| F3  | Giá 5×20 + F0,25A/250V  | Nhánh van; thay ống khi đứt      |
+| K1/K2 | G6KU-2F               | Cuộn 5 V từ +5V_RLY             |
+| Q3/Q4 | 2N3904                | Driver relay                    |
+| D3/D4 | SS34 SOD-123          | Flyback cuộn (cùng D8/D5)       |
+| Q5  | AO3400A                 | Solenoid cắt mass phía âm       |
+| D5  | SS34                    | Flyback van 24 V                |
+| R11/R12 | 1 kΩ                | Cực bazơ driver                 |
+| R13/R14 | 100 Ω / 10 kΩ       | Cổng van                        |
+
+
+6. Mạng (net) tham chiếu
+------------------------
+Tên mạng giữ nguyên trong KiCad; mô tả kết nối:
+
+VIN_RAW:      J1-1 → F1-1
+VIN_CM_IN:    F1-2 → L2-1
+VIN_CM_RET:   J1-2 → L2-3
+VIN_FUSE:     L2-2, D7-1, RV1-1, Q12-2, C15-1, C19-1
+GND_PWR:      L2-4, D7-2, RV1-2, C19-2, C15-2, C14-2, C4-2, NT1-1, D11-1, C23-1,
+              U2-5, D8-2, mass về buck/LDO công suất, Q3/Q4/Q5 driver, J4-3, D12-2, C24-2, C25-2
+GND_SPLICE:   NT1-2, D11-2, C23-2, FB3-1
+GND:          FB3-2, MCU, opto, RS485, phía logic C2/C22, tụ +3V3
++24V:         Q12-3, C4-1, C14-1, U2-1, C16/C17, R38, F3-1
++24V_SOL:     F3-2, J7-1, D5-1 (katốt flyback)
++5V_RAW:      L1-2, C2, C5, FB2-1
++5V:          FB2-2, C22, vào U3, ESP32-19, U7-8, phát quang, FB4-1
++5V_RLY:      FB4-2, F2, cuộn+ K1/K2, katốt D3/D4
++3V3:         FB1-2, C21, ESP32, kéo lên opto
+
+
+7. Quy tắc đi dây PCB
+---------------------
+- Vòng buck (U2, L1, D8, C2) gọn trong cột PWR_BUCK; không đi SW/L1 dưới hoặc song song U1.
+- +5V logic và +5V_RLY: nhánh tách tại FB4/F2; relay không dùng trace +5V chung dài với ESP32.
+- Mass về driver relay/van: GND_PWR, đường ngắn trong cột PWR_24V_OUT.
+- NT1, D11, C23, FB3: bố trí trong ô bulk/nối mass*; không thêm via nối GND_PWR–GND dọc ranh giới MCU.
+- RS485 A/B: đôi xoắt; mass J8; bọc chắn một đầu; không chạy sát cột công suất.
+- Refill pour GND / GND_PWR sau đi dây; điểm sao duy nhất tại NT1.
+
+
+8. Cầu chì thay tay (F1, F2, F3)
+--------------------------------
+- Linh kiện: giá đỡ cầu chì ống **5×20 mm** gắn PCB (footprint `Fiberboard:Fuseholder_5x20mm_Horizontal`).
+- Cầu chì rời: ống thủy tinh **5×20 mm** (mua lốc Shopee: `cầu chì 5x20 F4A`, `F0.5A`, `F0.25A`).
+- Khi đứt: chỉ thay ống; **không** thay PPTC SMD, không hàn lại mạch.
+- Dòng gợi ý: F1 **F4A** (nguồn vào ~2 A); F2 **F0,5A** (cuộn relay); F3 **F0,25A** (van). Chỉnh dòng theo tải thực tế.
+
+
+9. Lắp tủ
+---------
+- Dây nguồn 24 V xoắn; tách cáp motor/biến tần khỏi domino tín hiệu.
+- Vỏ kim loại: nối đất một điểm với GND_PWR (nếu dùng).
+- Tham chiếu bố trí EMI: IEC 61000-6-2.
+- Dừng khẩn / cửa / SIL: phần cứng an toàn riêng (ISO 13849, IEC 60204-1); bo này chỉ logic.
+
+
+10. Giá linh kiện (ước lượng, VND)
+----------------------------------
+BOM đầy đủ từng Ref (88 chỗ hàn, cầu chì 5×20): **pcb/BOM.txt**
+
+| Phạm vi | Thấp | Cao |
+|---------|------|-----|
+| Khối nguồn (protect + buck + F2/D12/C24 + F3/Q5/D5, không relay) | ~165k | ~300k |
+| Relay K1/K2 + driver + J5/J6 | ~55k | ~100k |
+| Quang AFBR ×4 + decap | ~220k | ~480k |
+| MCU socket + I/O + RS485 + domino J1–J8 + LED | ~75k | ~145k |
+| **Tổng linh kiện trên PCB** (chưa ESP32 module, chưa PCB) | **~530k** | **~1.060k** |
+| + ESP32-DevKitC | +90k | +185k |
+| + PCB 2L 172×98 mm (lô nhỏ) | +25k | +120k |
+| **Một máy lắp đủ (có DevKit + PCB)** | **~645k** | **~1.365k** |
+
+Nguồn 24 V tủ: ~150k–400k. Giá AFBR và relay chiếm phần lớn biên độ trên.
+
+
+11. Tệp trong kho Fiberboard
+----------------------------
+- KiCad: pcb/fiberboard-logic.kicad_pro
+- BOM + giá: pcb/BOM.txt
+- Sinh lại dự án: python pcb/scripts/generate_kicad_project.py
+- Kiểm tra bố trí: python pcb/scripts/check_pcb_layout.py
+- Ghi chú bo: pcb/DESIGN_NOTES.txt

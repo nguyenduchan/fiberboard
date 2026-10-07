@@ -1,75 +1,61 @@
-Fiberboard AIO Logic (No Nema) — Design Notes
-===========================================
+Fiberboard logic tích hợp — Ghi chú thiết kế (cấu hình cuối)
+==============================================================
 
-Variant: Pure logic / DC pump / feeder / foreign-body alarm / mini filler
+Biến thể: logic / feeder / báo / mini filler (không Nema). MCU: đế cắm ESP32-DevKitC-32E (U1, 38 chân).
 
-MCU
-- ESP32-DevKitC on U1 female socket (USB program on DevKit)
+Tài liệu nguồn + layout: pcb/PWR_24V_PROTECT_BUCK_GUIDE.txt
+BOM đầy đủ + giá: pcb/BOM.txt
+Lắp ráp DNP theo giắc: pcb/ASSEMBLY.txt
 
-Power (24V IN — mandatory protection at domino)
-- J1 VIN 9-24Vdc ->
-  F1 PPTC MF-MSMF350 (3.5A hold, 24V) ->
-  D7 TVS SMAJ28A (bidirectional clamp ~28V) ->
-  Q12 AO4407A P-FET high-side anti-reverse (low drop vs Schottky) ->
-  C4 470uF + C14/C15 100nF bulk/filter ->
-  Buck U2 XL1509-5 (C16/C17 in, D8 SS34, L1 47uH, C2/C5 out, R36/R37 FB) -> +5V
-  LDO U3 AMS1117-3.3 (C7 in, C3/C18 out) -> +3V3 for ESP32 & logic
-  +5V also: DevKit pin19, relays, RS485, IR LED TX ; solenoid load uses +24V rail
 
-Assembly: SMD-first (0805/1206, SOIC, SOT, SMD relay G6KU, PC817 SO-4). Field screw terminals and AFBR Versatile Link are through-hole by part type.
+Nguồn và mass
+-------------
+- VIN J1 9–24 V → F1 (giá cầu chì 5×20, ống F4A thay tay) → L2 → RV1/D7 → Q12 → C4 → U2 buck → FB2/C22 → +5V
+  → U3/FB1 → +3V3
+- Điểm sao mass: NT1 (GND_PWR ↔ GND_SPLICE); D11 + C23; FB3 → GND logic
+- +5V_RLY: FB4 → F2 (5×20 F0,5A) → D12/C24/C25 → K1/K2 (flyback D3/D4)
+- +24V_SOL: F3 (5×20 F0,25A) → J7 van (flyback D5); Q5 cắt mass phía âm
+- Không DC-DC cách ly; đầu vào quang PC817; RS485 TVS D9/D10, R18/R19
 
-PCB size / JLCPCB / enclosure
-- Board 172×98 mm for PLC ABS box 179×100×48 mm (Shopee; internal ~172×98 mm).
-- JLCPCB: 2-layer 1.6 mm FR4; panel ~1.7 cm² (wider than 100 mm → not $2 promo).
-- Mount: standoffs in PLC shell; side keepout 3 mm.
+Pour mass (đồng)
+----------------
+- GND_PWR: cột bảo vệ + buck + công suất + domino trái (mass về J1, J5–J7)
+- GND: cột MCU_SIGNAL + I/O phải
+- Nối pour: chỉ NT1 (+ D11/C23/FB3 trên sơ đồ)
 
-Fiber optic (2ch) — integrated Versatile Link on PCB (1 mm POF)
--------------------------------------------------------------
-  TX AFBR-1624Z (F1T/F2T) + RX AFBR-2624Z (F1R/F2R) per channel, front row (signal side)
-  IO32/IO33 PWM -> transmitter | receiver TTL -> IO4/IO15
-  No external amplifier; removed fiber clamp terminals J2/J11
+Layout PCB 118×84 mm (hộp PLC 145×90×40, giắc trên cạnh dài)
+----------------------------------------------------------
+- Cạnh dài trên (vào): J1 nguồn 24 V, J3 chân, J4 NPN, F1T/F1R, F2T/F2R
+- Cạnh dài dưới (ra): J5 relay, J6 relay, J7 van, J2 cấp 24 V keyboard, J8 RS485
+- Trong lòng: nguồn + relay bên trái; ESP32 nằm ngang bên phải. Nhóm lắp ráp giữ nguyên.
+- 145T-1D là lỗ 1 phía (khoảng 20P trên một cạnh dài). Hàng ra ở cạnh dài đối diện cần bản lỗ 2 phía hoặc khoét thêm.
 
-GPIO
-- IO32 FIBER1_PWM, IO33 FIBER2_PWM
-- IO4  FIBER1_DIG, IO15 FIBER2_DIG
-- IO25 FOOT, IO26 NPN
-- IO27 RELAY1, IO14 RELAY2, IO13 MOSFET
-- IO16/17 RS485, IO21/22 I2C OLED
+I/O
+---
+- Relay G6KU J5/J6; solenoid J7; FOOT/NPN J3/J4 (opto); RS485 J8 2EDG5.08
+- Quang 2 kênh AFBR trên bo; sợi POF 1 mm; C12/C13 lọc nguồn cục bộ
+- Flyback: D3/D4 relay 5 V; D5 solenoid 24 V
 
-Other I/O
-- 2x G5LE-1 relays COM/NO/NC, MOSFET solenoid, RS485, OLED header
-- Flyback diodes D3/D4/D5: cathode to supply rail, anode to switched end
+GPIO (ESP32)
+------------
+IO32/33 PWM quang | IO4/15 số | IO25 FOOT | IO26 NPN
+IO27/14 relay | IO13 solenoid | IO16/17/23 RS485 | IO21/22 I2C (không header OLED)
 
-Ground (split plane)
-- GND_PWR: domino return, 24V/buck (U2, D8), bulk C4 (-), relay drivers, solenoid AO3400A, NPN field GND (J4-3)
-- GND: ESP32, 3.3V/LDO, fiber, optos, RS485, OLED, +5V output caps
-- Single star: C4 negative + NT1 (NetTie) — only place the two grounds meet on copper
+Quang 2 kênh (POF 1 mm)
+-----------------------
+- Phát AFBR-1624Z (F1T/F2T) và thu AFBR-2624Z (F1R/F2R) cùng cạnh dài trên
+- IO32/IO33 LEDC → DATA_IN phát | DATA_OUT thu → IO4/IO15
+- C12/C13 100 nF mỗi kênh; không kẹp J2/J11; không khuếch đại ngoài
 
-PCB layout (172 x 98 mm, side keepout 3 mm)
-- Front face = bottom edge, one row: J1 J5 J6 J7 | F1T F1R F2T F2R J3 J4 J8 J9 (split GND ~62 mm)
-- Interior above connectors: POWER / FIBER_DECAP / MCU / INPUTS / RS485 / UI / POWER_STAGE
-Silkscreen text = user I/O guidance on connector row; designators on F.Fab.
+PCB / vỏ / gia công
+-------------------
+- Edge.Cuts 118×84 mm (vỏ 145×90×40, lòng thân ~125×90; giắc dọc cạnh 145 mm)
+- 2 lớp FR4 1,6 mm; sâu hộp 40 mm — kiểm tra đế + DevKitC không chạm nắp
+- Silk: nhãn tiếng Việt sát giắc (pcb_layout.py IO_LABELS)
 
-PCB workflow
-1. Open pcb/fiberboard-logic.kicad_pro
-2. Route (ratsnest shows all nets), refill GND and GND_PWR pours (star at NT1 beside C4)
-
-Fiber (2 channels) — on-board Versatile Link (no external amplifier)
-====================================================================
-Parts (per channel):
-  TX: AFBR-1624Z  (650 nm LED + driver, TTL in, 3.3/5 V)
-  RX: AFBR-2624Z  (PIN + digitizer, TTL out, 3.3/5 V)
-Fiber: 1 mm plastic optical fiber (POF), plug into module on front connector row (right side).
-
-Wiring:
-  ESP32 IO32/IO33 LEDC PWM -> F1T/F2T DATA_IN (optical power / modulation)
-  F1R/F2R DATA_OUT -> ESP32 IO4 / IO15 (digital receive)
-  +5 V + 100 nF local decoupling per channel (C12/C13)
-  Footprint: Broadcom horizontal Versatile Link DIP (2.54 mm pitch, 7.62 mm rows) — see AV02-4369EN
-
-GPIO:
-  IO32 FIBER1_PWM   IO33 FIBER2_PWM
-  IO4  FIBER1_DIG   IO15 FIBER2_DIG
-  (IO34/IO35 ADC unused — no discrete analog front-end)
-
-Alternates (same footprint family): AFBR-1629Z / AFBR-2529Z (inverted logic).
+Quy trình
+---------
+1. pcb/fiberboard-logic.kicad_pro
+2. python pcb/scripts/generate_kicad_project.py (sau khi sửa script)
+3. python pcb/scripts/check_pcb_layout.py
+4. Đi dây ratsnest; refill GND / GND_PWR tại NT1 (DRC unconnected trước khi đi dây là bình thường)

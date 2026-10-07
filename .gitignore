@@ -29,10 +29,12 @@ _autosave-*
 **/.history/
 
 # --- KiCad tool reports (regenerate with kicad-cli / checks) ---
+*-erc.rpt
+*-drc.rpt
+*-erc.json
+*-drc.json
 pcb/erc.rpt
 pcb/drc.rpt
-pcb/**/*-erc.rpt
-pcb/**/*-drc.rpt
 
 # --- Exports (Gerber, SVG, netlist from KiCad CLI — not source of truth) ---
 pcb/exports/

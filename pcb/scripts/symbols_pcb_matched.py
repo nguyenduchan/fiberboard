@@ -61,10 +61,11 @@ def _sym_header(name: str, ref: str, footprint: str, descr: str, keywords: str) 
 def esp32_devkitc_socket(prefix: str = "") -> str:
     """38-pin dual header, 2.54mm pitch, 25.4mm row spacing — matches footprint 1:1."""
     name = f"{prefix}ESP32_DevKitC_Socket" if prefix else "ESP32_DevKitC_Socket"
-    # DevKitC pinout, USB at bottom (same as footprint silk "USB")
+    # ESP32-DevKitC-32E (V4): USB ở −Y, chân 1 (3V3) phía ăng-ten. J2 trái, J3 phải.
+    # https://docs.espressif.com — J2: … IO14, IO12, GND, IO13 … 5V
     left_names = [
         "3V3", "EN", "SVP", "SVN", "IO34", "IO35", "IO32", "IO33", "IO25",
-        "IO26", "IO27", "IO14", "GND", "IO12", "IO13", "SD2", "SD3", "CMD", "5V",
+        "IO26", "IO27", "IO14", "IO12", "GND", "IO13", "SD2", "SD3", "CMD", "5V",
     ]
     right_names = [
         "GND", "IO23", "IO22", "TXD0", "RXD0", "IO21", "GND", "IO19", "IO18",
@@ -73,7 +74,7 @@ def esp32_devkitc_socket(prefix: str = "") -> str:
     left_types = [
         "power_out", "input", "input", "input", "input", "input",
         "bidirectional", "bidirectional", "bidirectional", "bidirectional",
-        "bidirectional", "bidirectional", "power_in", "bidirectional",
+        "bidirectional", "bidirectional", "bidirectional", "power_in",
         "bidirectional", "bidirectional", "bidirectional", "bidirectional", "power_in",
     ]
     right_types = [
@@ -96,7 +97,7 @@ def esp32_devkitc_socket(prefix: str = "") -> str:
     body_top = 2.54
     body_bot = -18 * 2.54 - 1.27  # -46.99
     return f'''{_sym_header(name, "U", "Fiberboard:ESP32_DevKitC_Socket",
-                         "ESP32-DevKitC socket, pin geometry matches PCB footprint",
+                         "ESP32-DevKitC-32E socket, pin order matches Espressif J2/J3",
                          "ESP32 DevKit socket PCB")}
 \t\t(symbol "{name.split(":")[-1]}_0_1"
 \t\t\t(rectangle
@@ -175,11 +176,11 @@ def fiber_clamp_1ch(prefix: str = "") -> str:
 
 
 def terminal_block(n: int, pitch: float = 5.08, prefix: str = "") -> str:
-    """Horizontal screw terminal, pin pitch matches Phoenix MKDS footprint."""
+    """Horizontal 2EDG5.08 pluggable socket (cái PCB)."""
     name = f"{prefix}Screw_Terminal_01x{n:02d}" if prefix else f"Screw_Terminal_01x{n:02d}"
     fp = {
-        2: "TerminalBlock_Phoenix:TerminalBlock_Phoenix_MKDS-1,5-2-5.08_1x02_P5.08mm_Horizontal",
-        3: "TerminalBlock_Phoenix:TerminalBlock_Phoenix_MKDS-1,5-3-5.08_1x03_P5.08mm_Horizontal",
+        2: "Fiberboard:Terminal_2EDG5.08-1x02_P5.08mm_Horizontal",
+        3: "Fiberboard:Terminal_2EDG5.08-1x03_P5.08mm_Horizontal",
         4: "Connector_PinHeader_2.54mm:PinHeader_1x04_P2.54mm_Vertical",
     }.get(n, "")
     if n == 4:
@@ -390,6 +391,32 @@ def afbr_2624z(prefix: str = "") -> str:
 \t)'''
 
 
+def cm_choke_4(prefix: str = "") -> str:
+    """4-pin common-mode choke; pads 1–2 = line 1, 3–4 = line 2 (ACM2012-class)."""
+    name = f"{prefix}CM_Choke_4" if prefix else "CM_Choke_4"
+    fp = "Inductor_SMD:L_CommonModeChoke_Coilank_ACM2012"
+    pins = [
+        _pin("1", "1", "passive", -7.62, 2.54, 0, 2.54),
+        _pin("2", "2", "passive", -7.62, -2.54, 0, 2.54),
+        _pin("3", "3", "passive", 7.62, 2.54, 180, 2.54),
+        _pin("4", "4", "passive", 7.62, -2.54, 180, 2.54),
+    ]
+    return f'''{_sym_header(name, "L", fp, "Common-mode choke V+/GND return", "Filter")}
+\t\t(symbol "{name.split(":")[-1]}_0_1"
+\t\t\t(rectangle
+\t\t\t\t(start -5.08 3.81)
+\t\t\t\t(end 5.08 -3.81)
+\t\t\t\t(stroke (width 0.254) (type default))
+\t\t\t\t(fill (type background))
+\t\t\t)
+\t\t\t(text "CM" (at 0 0 0) (effects (font (size 1.27 1.27))))
+\t\t)
+\t\t(symbol "{name.split(":")[-1]}_1_1"
+{chr(10).join(pins)}
+\t\t)
+\t)'''
+
+
 def net_tie_2(prefix: str = "") -> str:
     """Two-pin net tie; geometry matches connectivity.PIN_GEOM Fiberboard:NetTie_2."""
     name = f"{prefix}NetTie_2" if prefix else "NetTie_2"
@@ -451,6 +478,7 @@ def all_symbols_for_lib() -> str:
         soic8(),
         sot23(),
         net_tie_2(),
+        cm_choke_4(),
     ]
     return "\n".join(parts)
 
@@ -471,6 +499,7 @@ def all_symbols_for_schematic_embed() -> str:
         soic8(p),
         sot23(p),
         net_tie_2(p),
+        cm_choke_4(p),
     ]
     return "\n".join(parts)
 
@@ -478,33 +507,41 @@ def all_symbols_for_schematic_embed() -> str:
 # PCB placement table (mm) — schematic uses same XY * SCALE + OFFSET
 PCB_PLACEMENTS = [
     # ref, lib_id, value, footprint, pcb_x, pcb_y, rot, pin_count
-    ("J1", "Fiberboard:Screw_Terminal_01x02", "VIN", "TerminalBlock_Phoenix:TerminalBlock_Phoenix_MKDS-1,5-2-5.08_1x02_P5.08mm_Horizontal", 15, 15, 0, 2),
+    ("J1", "Fiberboard:Screw_Terminal_01x02", "VIN", "Fiberboard:Terminal_2EDG5.08-1x02_P5.08mm_Horizontal", 15, 15, 0, 2),
     ("U2", "Regulator_Switching:XL1509-5.0", "XL1509-5.0", "Package_TO_SOT_SMD:TO-263-5_TabPin3", 40, 18, 0, 5),
     ("L1", "Device:L", "47uH", "Inductor_SMD:L_1210_3225Metric", 55, 18, 0, 2),
     ("U3", "Regulator_Linear:AMS1117-3.3", "AMS1117-3.3", "Package_TO_SOT_SMD:SOT-223-3_TabPin2", 70, 18, 0, 3),
     ("C1", "Device:C", "100uF", "Capacitor_SMD:C_1206_3216Metric", 28, 28, 0, 2),
-    ("C2", "Device:C", "100uF", "Capacitor_SMD:C_1206_3216Metric", 55, 28, 0, 2),
+    ("C2", "Device:C", "220uF", "Capacitor_SMD:CP_Elec_6.3x5.4", 55, 28, 0, 2),
     ("C3", "Device:C", "22uF", "Capacitor_SMD:C_0805_2012Metric", 75, 28, 0, 2),
     ("U1", "Fiberboard:ESP32_DevKitC_Socket", "ESP32-DevKitC", "Fiberboard:ESP32_DevKitC_Socket", 45, 60, 0, 38),
     # Fiber optic front-end (TX PWM + RC + LM358 + LM393) — see FIBER_PCB_PARTS
     ("U5", "Fiberboard:Opto_DIP6", "4N25", "Package_DIP:DIP-6_W7.62mm", 20, 120, 0, 6),
     ("U6", "Fiberboard:Opto_DIP6", "4N25", "Package_DIP:DIP-6_W7.62mm", 40, 120, 0, 6),
-    ("J3", "Fiberboard:Screw_Terminal_01x02", "FOOT", "TerminalBlock_Phoenix:TerminalBlock_Phoenix_MKDS-1,5-2-5.08_1x02_P5.08mm_Horizontal", 15, 135, 0, 2),
-    ("J4", "Fiberboard:Screw_Terminal_01x03", "NPN", "TerminalBlock_Phoenix:TerminalBlock_Phoenix_MKDS-1,5-3-5.08_1x03_P5.08mm_Horizontal", 40, 135, 0, 3),
+    ("J3", "Fiberboard:Screw_Terminal_01x02", "FOOT", "Fiberboard:Terminal_2EDG5.08-1x02_P5.08mm_Horizontal", 15, 135, 0, 2),
+    ("J4", "Fiberboard:Screw_Terminal_01x03", "NPN", "Fiberboard:Terminal_2EDG5.08-1x03_P5.08mm_Horizontal", 40, 135, 0, 3),
     ("K1", "Fiberboard:G5LE-1", "G5LE-14-DC5", "Relay_THT:Relay_SPDT_Omron-G5LE-1", 75, 125, 0, 5),
     ("K2", "Fiberboard:G5LE-1", "G5LE-14-DC5", "Relay_THT:Relay_SPDT_Omron-G5LE-1", 100, 125, 0, 5),
-    ("J5", "Fiberboard:Screw_Terminal_01x03", "RLY1", "TerminalBlock_Phoenix:TerminalBlock_Phoenix_MKDS-1,5-3-5.08_1x03_P5.08mm_Horizontal", 75, 145, 0, 3),
-    ("J6", "Fiberboard:Screw_Terminal_01x03", "RLY2", "TerminalBlock_Phoenix:TerminalBlock_Phoenix_MKDS-1,5-3-5.08_1x03_P5.08mm_Horizontal", 100, 145, 0, 3),
+    ("J5", "Fiberboard:Screw_Terminal_01x03", "RLY1", "Fiberboard:Terminal_2EDG5.08-1x03_P5.08mm_Horizontal", 75, 145, 0, 3),
+    ("J6", "Fiberboard:Screw_Terminal_01x03", "RLY2", "Fiberboard:Terminal_2EDG5.08-1x03_P5.08mm_Horizontal", 100, 145, 0, 3),
     ("Q3", "Fiberboard:SOT23", "2N3904", "Package_TO_SOT_SMD:SOT-23", 65, 115, 0, 3),
     ("Q4", "Fiberboard:SOT23", "2N3904", "Package_TO_SOT_SMD:SOT-23", 90, 115, 0, 3),
     ("Q5", "Fiberboard:SOT23", "AO3400A", "Package_TO_SOT_SMD:SOT-23", 20, 155, 0, 3),
     ("D5", "Device:D", "SS34", "Diode_SMD:D_SMA", 30, 155, 0, 2),
-    ("J7", "Fiberboard:Screw_Terminal_01x02", "SOL", "TerminalBlock_Phoenix:TerminalBlock_Phoenix_MKDS-1,5-2-5.08_1x02_P5.08mm_Horizontal", 15, 168, 0, 2),
+    ("J7", "Fiberboard:Screw_Terminal_01x02", "SOL", "Fiberboard:Terminal_2EDG5.08-1x02_P5.08mm_Horizontal", 15, 168, 0, 2),
     ("U7", "Interface_UART:MAX485E", "MAX485E", "Package_SO:SOIC-8_3.9x4.9mm_P1.27mm", 55, 160, 0, 8),
-    ("J8", "Fiberboard:Screw_Terminal_01x03", "RS485", "TerminalBlock_Phoenix:TerminalBlock_Phoenix_MKDS-1,5-3-5.08_1x03_P5.08mm_Horizontal", 75, 168, 0, 3),
-    ("J9", "Fiberboard:Screw_Terminal_01x04", "OLED", "Connector_PinHeader_2.54mm:PinHeader_1x04_P2.54mm_Vertical", 110, 168, 0, 4),
+    (
+        "J8",
+        "Fiberboard:Screw_Terminal_01x03",
+        "RS485-2EDG3P",
+        "Fiberboard:Terminal_2EDG5.08-1x03_P5.08mm_Horizontal",
+        75,
+        168,
+        0,
+        3,
+    ),
     ("D6", "Device:LED", "STATUS", "LED_SMD:LED_0805_2012Metric", 120, 160, 0, 2),
-    ("J10", "Fiberboard:Screw_Terminal_01x02", "BTN", "TerminalBlock_Phoenix:TerminalBlock_Phoenix_MKDS-1,5-2-5.08_1x02_P5.08mm_Horizontal", 110, 180, 0, 2),
+    ("J10", "Fiberboard:Screw_Terminal_01x02", "BTN", "Fiberboard:Terminal_2EDG5.08-1x02_P5.08mm_Horizontal", 110, 180, 0, 2),
 ]
 PCB_PLACEMENTS.extend(FIBER_PCB_PARTS)
 
