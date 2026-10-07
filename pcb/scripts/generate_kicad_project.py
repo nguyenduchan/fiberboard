@@ -26,6 +26,7 @@ from pcb_layout import (  # noqa: E402
     build_layout,
     ground_pour_polygons,
     group_sexpr,
+    passive_mark_silk,
     postprocess_footprint,
     zone_group,
 )
@@ -34,7 +35,11 @@ from symbols_pcb_matched import (  # noqa: E402
     all_symbols_for_schematic_embed,
 )
 
-KICAD = Path(r"C:\Users\duchan.nguyen\AppData\Local\Programs\KiCad\10.0\share\kicad")
+_KICAD_CANDIDATES = (
+    Path(r"C:\Users\duchan.nguyen\AppData\Local\Programs\KiCad\10.0\share\kicad"),
+    Path.home() / "AppData/Local/Programs/KiCad/10.0/share/kicad",
+)
+KICAD = next((p for p in _KICAD_CANDIDATES if p.is_dir()), _KICAD_CANDIDATES[0])
 SYM_DIR = KICAD / "symbols"
 FP_DIR = KICAD / "footprints"
 PROJECT = "fiberboard-logic"
@@ -152,6 +157,7 @@ def place_symbol(
     in_bom: bool = True,
     pin_count: int = 8,
     pin_numbers: list[str] | None = None,
+    show_value: bool = False,
 ) -> str:
     if pin_numbers is None:
         # ESP32 has pins 1..38 contiguous; most parts 1..N
@@ -161,6 +167,14 @@ def place_symbol(
             pin_numbers = [str(i) for i in range(1, pin_count + 1)]
     pins = [f'\t\t(pin "{n}"\n\t\t\t(uuid "{uid()}")\n\t\t)' for n in pin_numbers]
     pin_block = "\n".join(pins)
+    if show_value:
+        value_at = f"{x + 5.08} {y}"
+        value_size = "1.016"
+        value_hide = ""
+    else:
+        value_at = f"{x} {y + 2.54}"
+        value_size = "1.27"
+        value_hide = "\n\t\t\t\t(hide yes)"
     return f'''\t(symbol
 \t\t(lib_id "{lib_id}")
 \t\t(at {x} {y} {rotation})
@@ -176,14 +190,15 @@ def place_symbol(
 \t\t\t\t(font
 \t\t\t\t\t(size 1.27 1.27)
 \t\t\t\t)
+\t\t\t\t(hide yes)
 \t\t\t)
 \t\t)
 \t\t(property "Value" "{value}"
-\t\t\t(at {x} {y + 2.54} 0)
+\t\t\t(at {value_at} 0)
 \t\t\t(effects
 \t\t\t\t(font
-\t\t\t\t\t(size 1.27 1.27)
-\t\t\t\t)
+\t\t\t\t\t(size {value_size} {value_size})
+\t\t\t\t){value_hide}
 \t\t\t)
 \t\t)
 \t\t(property "Footprint" "{footprint}"
@@ -296,14 +311,18 @@ def make_esp32_socket_footprint() -> str:
 \t\t(uuid "{uid()}")
 \t)'''
         )
-    # DevKitC V4 (Espressif): bo 54.4×27.9 mm. Chân 1 (3V3) ở đầu ăng-ten, USB ở −Y.
-    # 5.9 mm từ mép ăng-ten tới tâm chân 1; 45.72 mm giữa chân 1 và chân 19; phần còn lại tới mép USB.
-    # WROOM-32: ăng-ten PCB 18×6.5 mm nằm ở mép đó (không tính vào courtyard đế).
+    # DevKitC V4 (Espressif): đường bao lớn nhất của module 54.4×27.9 mm.
+    # Chân 1 (3V3) ở đầu ăng-ten, USB ở −Y.
+    # 5.9 mm từ mép ăng-ten tới tâm chân 1; 45.72 mm giữa chân 1 và chân 19; 2.78 mm tới mép USB.
+    # Hàng chân cách 25.4 mm, bo rộng 27.9 mm nên mỗi bên thừa 1.25 mm.
+    # Courtyard trùng đường bao này để khi xếp, mép ăng-ten (+Y) không vào dải ray DIN.
     ant_y1 = 5.9
     ant_y0 = ant_y1 - 6.5
+    body_x = 13.95
+    usb_y = ant_y1 - 54.4
     silk = f'''\t(fp_rect
-\t\t(start -15.5 2.5)
-\t\t(end 15.5 -48.26)
+\t\t(start {-body_x} {ant_y1})
+\t\t(end {body_x} {usb_y})
 \t\t(stroke
 \t\t\t(width 0.15)
 \t\t\t(type default)
@@ -313,8 +332,8 @@ def make_esp32_socket_footprint() -> str:
 \t\t(uuid "{uid()}")
 \t)
 \t(fp_rect
-\t\t(start -15.5 2.5)
-\t\t(end 15.5 -48.26)
+\t\t(start {-body_x} {ant_y1})
+\t\t(end {body_x} {usb_y})
 \t\t(stroke
 \t\t\t(width 0.05)
 \t\t\t(type default)
@@ -348,18 +367,7 @@ def make_esp32_socket_footprint() -> str:
 \t\t(layer "F.SilkS")
 \t\t(uuid "{uid()}")
 \t)
-\t(fp_text user "Ăng-ten 18×6.5" (at 0 {(ant_y0 + ant_y1) / 2:.2f} 0) (layer "F.Fab") (uuid "{uid()}")
-\t\t(effects (font (size 0.7 0.7) (thickness 0.1)))
-\t)
-\t(fp_text reference "U1" (at 0 4.5 0) (layer "F.SilkS") (uuid "{uid()}")
-\t\t(effects (font (size 1 1) (thickness 0.15)))
-\t)
-\t(fp_text value "ESP32-DevKitC-Socket" (at 0 -50.5 0) (layer "F.Fab") (uuid "{uid()}")
-\t\t(effects (font (size 1 1) (thickness 0.15)))
-\t)
-\t(fp_text user "USB" (at 0 -46.5 0) (layer "F.SilkS") (uuid "{uid()}")
-\t\t(effects (font (size 0.8 0.8) (thickness 0.12)))
-\t)'''
+'''
     return f'''(footprint "ESP32_DevKitC_Socket"
 \t(version 20241229)
 \t(generator "fiberboard_gen")
@@ -369,13 +377,15 @@ def make_esp32_socket_footprint() -> str:
 \t(tags "esp32 socket header")
 \t(property "Reference" "U1"
 \t\t(at 0 5.5 0)
-\t\t(layer "F.SilkS")
+\t\t(layer "F.Fab")
+\t\t(hide yes)
 \t\t(uuid "{uid()}")
 \t\t(effects (font (size 1 1) (thickness 0.15)))
 \t)
 \t(property "Value" "ESP32_DevKitC_Socket"
 \t\t(at 0 -51.5 0)
 \t\t(layer "F.Fab")
+\t\t(hide yes)
 \t\t(uuid "{uid()}")
 \t\t(effects (font (size 1 1) (thickness 0.15)))
 \t)
@@ -521,10 +531,6 @@ def make_fiber_clamp_footprint() -> str:
 \t(attr through_hole)
 \t(fp_rect (start -12 6) (end 12 -6)
 \t\t(stroke (width 0.15) (type default)) (fill none) (layer "F.SilkS") (uuid "{uid()}"))
-\t(fp_text user "FIBER1" (at -6 4.5 0) (layer "F.SilkS") (uuid "{uid()}")
-\t\t(effects (font (size 0.8 0.8) (thickness 0.12))))
-\t(fp_text user "FIBER2" (at 6 4.5 0) (layer "F.SilkS") (uuid "{uid()}")
-\t\t(effects (font (size 0.8 0.8) (thickness 0.12))))
 \t(pad "1" thru_hole circle (at -8 0) (size 1.7 1.7) (drill 1.0) (layers "*.Cu" "*.Mask") (uuid "{uid()}"))
 \t(pad "2" thru_hole circle (at -4 0) (size 1.7 1.7) (drill 1.0) (layers "*.Cu" "*.Mask") (uuid "{uid()}"))
 \t(pad "3" thru_hole circle (at 4 0) (size 1.7 1.7) (drill 1.0) (layers "*.Cu" "*.Mask") (uuid "{uid()}"))
@@ -591,8 +597,6 @@ def make_afbr_1624z_footprint() -> str:
 \t\t(stroke (width 0.12) (type default)) (fill none) (layer "F.SilkS") (uuid "{uid()}"))
 \t(fp_circle (center 0 -9.2) (end 1.2 -9.2)
 \t\t(stroke (width 0.15) (type default)) (fill none) (layer "F.SilkS") (uuid "{uid()}"))
-\t(fp_text user "POF 1mm" (at 0 -9.2 0) (layer "F.SilkS") (uuid "{uid()}")
-\t\t(effects (font (size 0.65 0.65) (thickness 0.1))))
 {pads}
 \t(embedded_fonts no)
 )
@@ -647,8 +651,6 @@ def make_afbr_2624z_footprint() -> str:
 \t\t(stroke (width 0.12) (type default)) (fill none) (layer "F.SilkS") (uuid "{uid()}"))
 \t(fp_circle (center 0 -9.2) (end 1.2 -9.2)
 \t\t(stroke (width 0.15) (type default)) (fill none) (layer "F.SilkS") (uuid "{uid()}"))
-\t(fp_text user "POF 1mm" (at 0 -9.2 0) (layer "F.SilkS") (uuid "{uid()}")
-\t\t(effects (font (size 0.65 0.65) (thickness 0.1))))
 {pads}
 \t(embedded_fonts no)
 )
@@ -898,6 +900,8 @@ def _place_footprint_sexpr(fp: str, ref: str, value: str, x: float, y: float, ro
         else:
             body_lines.append(line)
     body = "\n".join(body_lines)
+    # Library graphics reuse the same uuids. KiCad rejects a board that copies them onto every part.
+    body = re.sub(r'\(uuid "[^"]+"\)', lambda _m: f'(uuid "{uid()}")', body)
 
     return (
         f'\t(footprint "{fp}"\n'
@@ -973,6 +977,13 @@ def build_pcb() -> str:
             footprints.append(sexpr)
         except Exception as exc:
             print(f"WARN footprint {p.ref} {c.footprint}: {exc}")
+
+    marks = {
+        ref: f"{'R' if c.lib_id == 'Device:R' else 'C'} {c.value}"
+        for ref, c in comps.items()
+        if c.lib_id == "Device:C" or (c.lib_id == "Device:R" and not c.value.startswith("MOV"))
+    }
+    graphics.extend(passive_mark_silk(placements, marks))
 
     # KiCad groups: footprint UUIDs only (no silk/gr_rect — those break the PCB editor).
     groups = [

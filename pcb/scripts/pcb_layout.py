@@ -10,7 +10,6 @@ from dataclasses import dataclass, field
 from assembly_groups import (
     ASSEMBLY_TITLES,
     CONNECTOR_ANCHORS,
-    RLY_PWR_REFS,
     SHARED_LAYOUT_REFS,
     STACK_REFS,
     assembly_group,
@@ -39,7 +38,8 @@ INTERIOR_COL_GAP = 0.7
 EDGE_MARGIN = 1.0
 ZONE_MARGIN = 0.45
 ITEM_GAP = 0.35
-ITEM_GAP_POWER = 0.4
+ITEM_GAP_POWER = 1.05
+ITEM_GAP_PROTECT = 1.55
 TEXT_SIZE = 0.85
 PIN_TEXT_SIZE = 0.7
 
@@ -53,33 +53,55 @@ _Y_BOT_IO1 = _Y_BOT_IO2 - IO_ROW_DEPTH
 _Y_IN0 = _Y_TOP_IO2 + 0.45
 _Y_STAGE0 = _Y_BOT_IO1 - 0.45
 _INTERIOR_H = _Y_STAGE0 - _Y_IN0
-# Cạnh dài trên: mọi ngõ vào, kể cả phát/thu quang.
-# Cạnh dài dưới: mọi ngõ ra, kể cả RS485.
+# Cạnh trên, trái: nguồn vào J1, chân, NPN. Quang bên phải.
+# Cạnh dưới, trái → phải: relay 1, relay 2, van, 24 V ra (J2), RS485.
+# Phần rộng còn lại đổ vào group đông linh kiện (relay, van, RS485, opto).
 TOP_IO_REFS = ["J1", "J3", "J4", "F1T", "F1R", "F2T", "F2R"]
 BOT_IO_REFS = ["J5", "J6", "J7", "J2", "J8"]
 TOP_IO_LEFT = ["J1", "J3", "J4"]
 TOP_IO_RIGHT = ["F1T", "F1R", "F2T", "F2R"]
-BOT_IO_LEFT = ["J5", "J6", "J7"]
-BOT_IO_RIGHT = ["J2", "J8"]
+BOT_IO_LEFT: list[str] = []
+BOT_IO_RIGHT = ["J5", "J6", "J7", "J2", "J8"]
 # Bề ngang thân cắm 2EDG5.08 đực (Shopee) ≥ footprint socket trên bo.
 EDG_PLUG_BODY_W_2P = 12.0
 EDG_PLUG_BODY_W_3P = 15.0
 PLUG_INTERIOR_DEPTH = 8.0
 # Versatile Link: cổng POF ở local −Y. rot 0 hướng lên mép trên; rot 180 hướng xuống mép dưới.
 FRONT_IO_AFBR = frozenset({"F1T", "F1R", "F2T", "F2R"})
-# DevKit nằm ngang (rot 90, ~51 × 31 mm). Dịch lên để cột J8 (cạnh dưới) còn chỗ.
+# DevKit nằm ngang (rot 90). Đường bao module 54.4×27.9 mm, ăng-ten ở +X, không vào dải ray.
 CONNECTOR_ZONE_ABOVE_JACK = 0.35
 MCU_ZONE_X1 = _XI1
 MCU_ZONE_X0 = MCU_ZONE_X1 - 56.0
 MCU_ZONE_Y0 = _Y_IN0 + 4.2
 MCU_ZONE_Y1 = MCU_ZONE_Y0 + 32.6
-# Nguồn bên trái, từ dưới cụm J3/J4 tới sát thân giắc ra (thân 2EDG không chiếm hết dải mép).
+# Hai cột nguồn, trái → phải: bảo vệ 24 V rồi buck. Tụ/trở cùng hàng với nút chúng lọc.
 PWR_X0 = _XI0
 PWR_X1 = MCU_ZONE_X0 - INTERIOR_COL_GAP
 PWR_Y0 = _Y_IN0 + 1.4
-PWR_Y1 = BOARD_H - 13.8
+PWR_Y1 = BOARD_H - 4.2
 LOGIC_X0 = MCU_ZONE_X0
 POWER_ZONE_W = PWR_X1 - PWR_X0
+PROTECT_X1 = 32.0
+BUCK_X0 = 32.8
+# J1 → F1/L2 → C19/C15 ‖ D7/RV1 → Q12/R17 → C4/C14 → sao mass.
+PROTECT_REFS = [
+    "F1", "L2", "C19", "C15", "D7", "RV1",
+    "Q12", "R17", "C4", "C14", "NT1", "D11", "C23", "FB3",
+]
+# C16/C17 sát Vin, D8/L1/R38–R37 sát SW và FB, C2/C5 sát ra buck, C7/U3/C3 sát LDO.
+BUCK_REFS = [
+    "C16", "C17", "U2", "D8", "L1", "R38", "R36", "R37",
+    "C2", "C5", "FB2", "C22", "C7", "U3", "C3", "C18", "FB1", "C21",
+]
+# Mỗi relay một cụm đủ mạch trong cột của cọc. Hàng sát giắc: cuộn + tụ + TVS.
+J5_CLUSTER_REFS = ["K1", "C24", "D12", "D3", "Q3", "R11", "FB4", "C25", "D17", "R26"]
+J6_CLUSTER_REFS = ["K2", "C26", "D26", "D4", "Q4", "R12", "FB5", "C27", "D18", "R27"]
+RELAY_AT_JACK_REFS: frozenset[str] = frozenset(J5_CLUSTER_REFS + J6_CLUSTER_REFS)
+# Đèn debug nguồn, đặt cạnh tụ của đúng rail (không chiếm hàng mới).
+POWER_DEBUG_REFS: frozenset[str] = frozenset({"D27", "R39", "D25", "R34", "D6", "R16"})
+# MOSFET van nằm giữa cọc J7. Nhãn silk "MOS" vì ref/value chip đang ẩn.
+J7_CLUSTER_REFS = ["Q5", "D5", "R13", "R14", "D19", "R28"]
+VALVE_AT_JACK_REFS: frozenset[str] = frozenset(J7_CLUSTER_REFS)
 
 
 @dataclass
@@ -116,27 +138,33 @@ ZONES = [
         "bottom",
         BOT_IO_REFS,
     ),
-    # Nguồn + relay + van: một khối bên trái, linh kiện lớn chung một hàng.
+    # Cột trái, ngay dưới J1. C19/C15 cùng hàng TVS/MOV; C14 sát C4; R17 sát Q12.
     Zone(
-        "PWR_24V_PROTECT_IN",
+        "PWR_24V_PROTECT",
         PWR_X0,
         PWR_Y0,
-        PWR_X1,
-        PWR_Y1,
+        PROTECT_X1,
+        PWR_Y0 + 37.2,
         "none",
-        [
-            "F1", "L2", "Q12", "RV1", "D7", "C19", "C15", "R17",
-            "C4", "C14", "NT1", "D11", "C23", "FB3",
-            "U2", "L1", "D8", "C2", "C22", "U3", "C16", "C17", "C7", "C3",
-            "FB2", "FB1", "R38", "R36", "R37", "C5", "C18", "C21",
-            *RLY_PWR_REFS,
-            "K1", "R11", "Q3", "D3",
-            "K2", "R12", "Q4", "D4",
-            "F3", "Q5", "D5", "R13", "R14",
-        ],
-        item_gap=ITEM_GAP_POWER,
+        PROTECT_REFS,
+        item_gap=0.85,
+        zone_margin=0.4,
+        align_top=True,
+        pack_by_ref_order=True,
+    ),
+    # Cột phải của khối nguồn, sát rail +24V vừa bảo vệ. Vòng buck không kéo xuống góc.
+    Zone(
+        "PWR_BUCK",
+        BUCK_X0,
+        PWR_Y0,
+        PWR_X1,
+        PWR_Y0 + 35.5,
+        "none",
+        BUCK_REFS,
+        item_gap=0.5,
         zone_margin=0.35,
         align_top=True,
+        pack_by_ref_order=True,
     ),
     Zone(
         "MCU_SIGNAL",
@@ -152,25 +180,15 @@ ZONES = [
     ),
 ]
 
-# Silk labels for interior zone boxes (F.SilkS, UTF-8)
+# Nhãn chữ nằm trên F.Fab: thấy trong KiCad, không vào mực in F.SilkS khi gia công.
 ZONE_TITLES: dict[str, str] = {
-    "PWR_24V_PROTECT_IN": "Lọc 24V IN",
-    "PWR_24V_PROTECT_BULK": "Bulk / GND*",
-    "PWR_24V_OUT_J5": "J5 relay",
-    "PWR_24V_OUT_J6": "J6 relay",
-    "PWR_24V_OUT_J7": "J7 van",
+    "PWR_24V_PROTECT": "Bảo vệ 24V",
     "PWR_BUCK": "Buck 5V / 3V3",
-    "MCU_SIGNAL": "MCU (ESP32)",
+    "MCU_SIGNAL": "MCU",
 }
 
-# KiCad groups: sub-zones map to the same group name as the parent block.
-GROUP_ALIAS: dict[str, str] = {
-    "PWR_24V_PROTECT_IN": "PWR_24V_PROTECT",
-    "PWR_24V_PROTECT_BULK": "PWR_24V_PROTECT",
-    "PWR_24V_OUT_J5": "PWR_24V_OUT",
-    "PWR_24V_OUT_J6": "PWR_24V_OUT",
-    "PWR_24V_OUT_J7": "PWR_24V_OUT",
-}
+# KiCad groups follow the zone name. Relay/van belong to the terminal groups.
+GROUP_ALIAS: dict[str, str] = {}
 
 
 def zone_group(zone_name: str) -> str:
@@ -178,11 +196,28 @@ def zone_group(zone_name: str) -> str:
 
 OUTPUT_STACK_REFS = STACK_REFS
 LAYOUT_FIXED_REFS: frozenset[str] = frozenset()
+# Dải trống dưới ESP32, phía mass logic (x > ranh GND_PWR). Không đè ăng-ten (đầu +X của U1)
+# và không vào thân cắm J2. TVS/điện trở A/B vẫn ở cột J8.
+# R20/R21 và trở nối tiếp GPIO nằm giữa hai hàng chân đế, không ở dải dưới module.
+MCU_SPREAD_REFS: frozenset[str] = frozenset({"U7", "R20", "R21", "R40", "R41", "R42", "R43", "R44", "R45"})
+ESP32_POCKET_REFS: frozenset[str] = frozenset({"R20", "R21", "R40", "R41", "R42", "R43", "R44", "R45"})
+# R22 hạn dòng D13. Không đặt cạnh đèn — cột J1 rộng nên hai 0805 trông như hai LED.
+J1_SERIES_REFS: frozenset[str] = frozenset({"R22"})
+# Phần rộng thừa của hàng giắc đổ vào group đông linh kiện. 0 = giữ bề ngang đầu cắm.
+COL_EXTRA_WEIGHT: dict[str, float] = {
+    "J3": 2.0,
+    "J4": 2.0,
+    "J5": 6.0,
+    "J6": 6.0,
+    "J7": 2.0,
+    "J8": 2.0,
+}
+COL_GAP_USE = 1.05
 
 # Screw terminals: wire entry is on the footprint's +Y side -> rotate to face the board edge
 EDGE_ROT = {"top": 180, "bottom": 0, "left": 270, "right": 90, "none": 0}
 # U1 nằm ngang cho bo thấp. Cầu chì nằm ngang (cao ~10 mm).
-FIXED_ROT = {"U1": 90, "F1": 0, "F2": 0, "F3": 0}
+FIXED_ROT = {"U1": 90, "F1": 0}
 
 
 def _io_footprint_rot(ref: str, edge: str) -> float:
@@ -190,7 +225,7 @@ def _io_footprint_rot(ref: str, edge: str) -> float:
         return 0.0 if edge == "top" else 180.0
     return EDGE_ROT[edge]
 
-# User-facing I/O guidance (F.SilkS, tiếng Việt có dấu): ref -> (chức năng, {pad: nhãn chân})
+# Nhãn giắc (tiếng Việt): ref -> (chức năng, {pad: nhãn chân}). Vẽ trên F.Fab, không in lên bo.
 IO_LABELS: dict[str, tuple[str, dict[str, str]]] = {
     "J1": ("Nguồn", {"1": "+", "2": "GND"}),
     "F1": ("", {}),
@@ -204,7 +239,6 @@ IO_LABELS: dict[str, tuple[str, dict[str, str]]] = {
     "J4": ("NPN", {"1": "V+", "2": "SIG", "3": "GND"}),
     "J8": ("RS485 cắm", {"1": "A", "2": "B", "3": "GND"}),
     "J2": ("Keyboard", {"1": "+24", "2": "GND"}),
-    "D6": ("Đèn báo", {}),
     "J5": ("Relay 1", {"1": "COM", "2": "NO", "3": "NC"}),
     "J6": ("Relay 2", {"1": "COM", "2": "NO", "3": "NC"}),
     "J7": ("Van", {"1": "+24V", "2": "SOL−"}),
@@ -303,25 +337,33 @@ def _column_width_pack(ref: str, geoms: dict, rot: float) -> float:
     return max(body_w, MIN_IO_COL_W) + 2 * PACK_COL_INSET
 
 
+def _widen_busy_columns(refs: list[str], raw: list[float], avail: float) -> tuple[list[float], float]:
+    """Give leftover row width to jacks whose groups hold many parts."""
+    n_gap = max(len(refs) - 1, 0)
+    gap = COL_GAP_USE if n_gap else 0.0
+    slack = avail - sum(raw) - gap * n_gap
+    weights = [COL_EXTRA_WEIGHT.get(r, 0.0) for r in refs]
+    wsum = sum(weights)
+    if slack > 0.4 and wsum > 0:
+        raw = [w + slack * wt / wsum for w, wt in zip(raw, weights)]
+    elif n_gap and slack < 0:
+        gap = max(0.15, (avail - sum(raw)) / n_gap)
+        if sum(raw) + gap * n_gap > avail + 0.05:
+            print(
+                f"WARN I/O row tight: {sum(raw) + gap * n_gap:.1f} mm in {avail:.1f} mm "
+                f"({refs[0]}..{refs[-1]})"
+            )
+    return raw, gap
+
+
 def _pack_io_columns(refs: list[str], x0: float, x1: float, geoms: dict, edge: str) -> list[tuple[str, float, float, float]]:
     """Return [(ref, col_x0, col_x1, col_cx), ...] filling [x0,x1]."""
     if not refs:
         return []
     avail = x1 - x0 - 2 * ZONE_MARGIN
     raw = [_column_width(r, geoms, _io_footprint_rot(r, edge)) for r in refs]
-    n_gap = max(len(refs) - 1, 0)
-    body_sum = sum(raw)
-    if n_gap:
-        gap_use = min(COL_GAP, max(0.0, (avail - body_sum) / n_gap))
-    else:
-        gap_use = 0.0
-    row_w = body_sum + gap_use * n_gap
-    if row_w > avail + 0.05:
-        print(
-            f"WARN I/O row tight: {row_w:.1f} mm in {avail:.1f} mm "
-            f"({refs[0]}..{refs[-1]}, gap {gap_use:.2f} mm)"
-        )
-    x = x0 + ZONE_MARGIN + max(0.0, (avail - row_w) / 2)
+    raw, gap_use = _widen_busy_columns(refs, raw, avail)
+    x = x0 + ZONE_MARGIN
     out: list[tuple[str, float, float, float]] = []
     for ref, w in zip(refs, raw):
         cx0, cx1 = x, x + w
@@ -338,23 +380,13 @@ def _pack_io_columns_from_right(
     edge: str = "bottom",
     stick_right: bool = False,
 ) -> list[tuple[str, float, float, float]]:
-    """Pack columns anchored at x1."""
+    """Pack columns anchored at x1. Busy groups absorb the spare width."""
     if not refs:
         return []
     avail = x1 - x0 - 2 * ZONE_MARGIN
     raw = [_column_width_pack(r, geoms, _io_footprint_rot(r, edge)) for r in refs]
-    n_gap = max(len(refs) - 1, 0)
-    body_sum = sum(raw)
-    if n_gap:
-        gap_use = min(COL_GAP, max(0.0, (avail - body_sum) / n_gap))
-    else:
-        gap_use = 0.0
-    row_w = body_sum + gap_use * n_gap
-    if row_w > avail + 0.05:
-        print(
-            f"WARN I/O row tight: {row_w:.1f} mm in {avail:.1f} mm "
-            f"({refs[0]}..{refs[-1]}, gap {gap_use:.2f} mm)"
-        )
+    raw, gap_use = _widen_busy_columns(refs, raw, avail)
+    row_w = sum(raw) + gap_use * max(len(refs) - 1, 0)
     slack = 0.0 if stick_right else max(0.0, (avail - row_w) / 2)
     x_right = x1 - ZONE_MARGIN - slack
     out_rev: list[tuple[str, float, float, float]] = []
@@ -380,9 +412,10 @@ def layout_edge_io(zone: Zone, geoms: dict) -> tuple[list[Placed], list[IoColumn
             TOP_IO_RIGHT, MCU_ZONE_X0, zone.x1, geoms, zone.edge, stick_right=True
         )
     elif zone.name == "BOT_IO":
+        # Giãn suốt cạnh dưới. Cột relay / van / RS485 nhận phần rộng thừa.
         col_specs = _pack_io_columns(BOT_IO_LEFT, zone.x0, MCU_ZONE_X0 - 0.4, geoms, zone.edge)
         col_specs += _pack_io_columns_from_right(
-            BOT_IO_RIGHT, MCU_ZONE_X0, zone.x1, geoms, zone.edge, stick_right=True
+            BOT_IO_RIGHT, zone.x0, zone.x1, geoms, zone.edge, stick_right=True
         )
     else:
         col_specs = _pack_io_columns(list(zone.refs), zone.x0, zone.x1, geoms, zone.edge)
@@ -749,14 +782,15 @@ def layout_connector_zones(
             continue
         on_top = anchor.bbox[3] < BOARD_H / 2
         max_w, sum_h, n = _part_spans(stack, geoms)
-        gap = 0.35 + 0.04 * n
+        # Cột J8: nới khe để TVS/điện trở không chồng sát mép ESP32.
+        gap = 1.35 if j_ref == "J8" else 0.35 + 0.04 * n
         route_h = 0.6 + 0.08 * n
         route_w = 0.7 + 0.06 * n
         need_h = sum_h + gap * max(n - 1, 0) + 0.4 + route_h
         col_w = (col.x1 - col.x0) - 0.15
         need_w = min(col_w, max(max_w + route_w, max_w + 1.2))
-        # Hai linh kiện nhỏ một hàng nếu cột đủ rộng.
-        if n >= 4 and col_w > max_w * 2.1:
+        # Đèn + trở một hàng khi cột đủ rộng, kể cả cột chỉ có vài linh kiện.
+        if col_w > max_w * 2.1:
             need_w = col_w
         cx = col.cx
         x0 = max(col.x0 + 0.08, cx - need_w / 2)
@@ -929,14 +963,15 @@ def gr_text(
     justify: str | None = None,
     *,
     truetype: bool = False,
+    angle: float = 0,
 ) -> tuple[str, str]:
     u = uid()
     just = f"\n\t\t\t(justify {justify})" if justify else ""
     face_line = "\t\t\t\t(face truetype)\n" if truetype else ""
     return u, (
         f'\t(gr_text "{silk_escape(txt)}"\n'
-        f"\t\t(at {round(x, 3)} {round(y, 3)} 0)\n"
-        f'\t\t(layer "F.SilkS")\n'
+        f"\t\t(at {round(x, 3)} {round(y, 3)} {round(angle % 360, 3):g})\n"
+        f'\t\t(layer "F.Fab")\n'
         f'\t\t(uuid "{u}")\n'
         f"\t\t(effects\n"
         f"\t\t\t(font\n"
@@ -947,6 +982,26 @@ def gr_text(
         f"\t\t)\n"
         f"\t)"
     )
+
+
+def passive_mark_silk(placements: list[Placed], marks: dict[str, str]) -> list[str]:
+    """Silk 'R 10k' / 'C 100nF' trên thân điện trở và tụ, để không đọc nhầm thành LED."""
+    out: list[str] = []
+    for p in placements:
+        label = marks.get(p.ref)
+        if not label:
+            continue
+        x0, y0, x1, y1 = p.bbox
+        long_side = max(x1 - x0, y1 - y0)
+        size = 0.7 if long_side >= 4.0 else 0.42
+        while _silk_text_width(label, size) > long_side - 0.2 and size > 0.32:
+            size = round(size - 0.02, 2)
+        ang = p.rot % 360
+        if 90 < ang <= 270:
+            ang = (ang + 180) % 360
+        _, ts = gr_text(label, (x0 + x1) / 2, (y0 + y1) / 2, size, angle=ang)
+        out.append(ts)
+    return out
 
 
 def _zone_title_graphics(zone: Zone) -> list[tuple[str, str]]:
@@ -1052,18 +1107,333 @@ def postprocess_footprint(sexpr: str, rot: float) -> str:
             text = re.sub(rf"\(at {_NUM} {_NUM}(?: {_NUM})?\)", _rot_at, text, count=1)
         if m.group(1) != "pad":
             text = text.replace('(layer "F.SilkS")', '(layer "F.Fab")')
+            if re.search(r'\((?:property "(?:Reference|Value)"|fp_text (?:reference|value))', text):
+                if "(hide yes)" not in text:
+                    text = text.replace("(effects", "(hide yes)\n\t\t\t(effects", 1)
         out.append(text)
     return "\n".join(out)
 
 
-def esp32_antenna_silk(u1: Placed) -> list[tuple[str, str]]:
-    """Nhãn silk cạnh vùng ăng-ten (hình 18×6.5 nằm trên footprint đế)."""
-    label = "Ăng-ten 18×6.5"
-    size = 0.7
-    lx, ly = 0.0, 6.7
-    rx, ry = rot_pt(lx, ly, u1.rot)
-    tw = _silk_text_width(label, size)
-    return [gr_text(label, u1.x + rx - tw / 2, u1.y + ry, size, truetype=True)]
+def _column_ceiling(col: IoColumn, blockers: list[Placed], y_jack: float) -> float:
+    """Highest board-y (smallest y) still clear of parts already placed in this column."""
+    y0 = _Y_IN0
+    for b in blockers:
+        if b.bbox[2] <= col.x0 + 0.2 or b.bbox[0] >= col.x1 - 0.2:
+            continue
+        if b.bbox[3] < y_jack:
+            y0 = max(y0, b.bbox[3] + 0.4)
+    return y0
+
+
+def _pocket_right(anchor: Placed, placed: list[Placed], x_limit: float) -> tuple[float, float, float]:
+    """Free strip immediately right of anchor, starting below anything already there."""
+    x0 = anchor.bbox[2] + 0.35
+    y0 = anchor.bbox[1]
+    y1 = anchor.bbox[3]
+    for p in placed:
+        if p.bbox[2] <= x0 - 0.05 or p.bbox[0] >= x_limit:
+            continue
+        if p.bbox[3] <= y0 or p.bbox[1] >= y1:
+            continue
+        y0 = max(y0, p.bbox[3] + 0.3)
+    return x0, y0, y1
+
+
+def _stack_in_pocket(
+    refs: list[str],
+    x: float,
+    y: float,
+    y_limit: float,
+    geoms: dict,
+) -> list[Placed] | None:
+    out: list[Placed] = []
+    for ref in refs:
+        _w, h = _fp_size(ref, geoms)
+        if y + h > y_limit + 0.05:
+            return None
+        out.append(_place_one_footprint(ref, geoms, x, y, 0.0))
+        y += h + 0.28
+    return out
+
+
+def _debug_silk(txt: str, x: float, y: float) -> str:
+    tsz = 0.55
+    _uid, silk = gr_text(txt, x, y, tsz, truetype=True)
+    return silk
+
+
+def layout_power_debug_leds(placements: list[Placed], geoms: dict) -> tuple[list[Placed], list[str]]:
+    """Debug LEDs in existing gaps: 24V beside C4, 5V beside C2, 3V3 between C22 and U3."""
+    by = {p.ref: p for p in placements}
+    out: list[Placed] = []
+    silk: list[str] = []
+
+    def put(anchor_ref: str, refs: list[str], x_limit: float) -> list[Placed] | None:
+        anchor = by[anchor_ref]
+        x, y, y_limit = _pocket_right(anchor, placements + out, x_limit)
+        stacked = _stack_in_pocket(refs, x, y, y_limit, geoms)
+        if stacked is None or stacked[-1].bbox[2] > x_limit:
+            print(f"WARN debug LED {refs[0]} does not fit beside {anchor_ref}")
+            return None
+        out.extend(stacked)
+        return stacked
+
+    p24 = put("C4", ["D27", "R39"], PROTECT_X1 - 0.35)
+    if p24 is not None:
+        low = p24[-1]
+        tw = _silk_text_width("24V", 0.55)
+        silk.append(_debug_silk("24V", (low.bbox[0] + low.bbox[2]) / 2 - tw / 2, low.bbox[3] + 1.05))
+    p5 = put("C2", ["D25", "R34"], PWR_X1 - 0.3)
+    if p5 is not None:
+        led = p5[0]
+        silk.append(_debug_silk("5V", led.bbox[2] + 0.35, (led.bbox[1] + p5[-1].bbox[3]) / 2))
+    # U3 is as tall as C22, so the 3V3 pair sits in the gap under C7, left of U3.
+    c22 = by["C22"]
+    u3 = by["U3"]
+    c7 = by["C7"]
+    x_3v3 = c22.bbox[2] + 0.35
+    y_3v3 = c7.bbox[3] + 0.3
+    stacked = _stack_in_pocket(["D6", "R16"], x_3v3, y_3v3, u3.bbox[3], geoms)
+    if stacked is None or stacked[-1].bbox[2] > u3.bbox[0] - 0.25:
+        print("WARN debug LED D6 does not fit between C22 and U3")
+    else:
+        out.extend(stacked)
+        low = stacked[-1]
+        tw = _silk_text_width("3V3", 0.55)
+        silk.append(
+            _debug_silk("3V3", (low.bbox[0] + low.bbox[2]) / 2 - tw / 2, low.bbox[3] + 0.6)
+        )
+    return out, silk
+
+
+def layout_relay_at_jacks(
+    edge_placed: dict[str, Placed],
+    columns: list[IoColumn],
+    geoms: dict,
+    blockers: list[Placed],
+) -> list[Placed]:
+    """Coil, driver, 5 V filter and LED, shelf-packed in the widened jack column."""
+    by_col = {c.ref: c for c in columns}
+    placed: list[Placed] = []
+    for jack_ref, refs in (("J5", J5_CLUSTER_REFS), ("J6", J6_CLUSTER_REFS)):
+        jack = edge_placed[jack_ref]
+        col = by_col[jack_ref]
+        y1 = jack.bbox[1] - 0.3
+        y0 = _column_ceiling(col, blockers, y1)
+        if y1 - y0 < 8.0:
+            print(f"WARN {jack_ref} relay column only {y1 - y0:.1f} mm tall")
+        zone = Zone(
+            f"CONN_{jack_ref}",
+            col.x0 + 0.15,
+            y0,
+            col.x1 - 0.15,
+            y1,
+            "bottom",
+            refs,
+            item_gap=0.4,
+            zone_margin=0.2,
+            pack_by_ref_order=True,
+        )
+        placed.extend(layout_zone(zone, geoms))
+    return placed
+
+
+def _fp_size(ref: str, geoms: dict) -> tuple[float, float]:
+    pts, _pads = geoms[ref]
+    bb = rotated_bbox(pts, 0.0)
+    return bb[2] - bb[0], bb[3] - bb[1]
+
+
+def layout_valve_at_jack(
+    edge_placed: dict[str, Placed],
+    columns: list[IoColumn],
+    geoms: dict,
+) -> tuple[list[Placed], list[str]]:
+    """Q5 centered on J7, flyback beside it, silk MOS so the FET is visible."""
+    jack = edge_placed["J7"]
+    col = next(c for c in columns if c.ref == "J7")
+    jx0, jy_in, jx1, _jy1 = jack.bbox
+    qw, qh = _fp_size("Q5", geoms)
+    dw, dh = _fp_size("D5", geoms)
+    gap = 0.5
+    span = qw + gap + dw
+    xq = jx0 + max(0.3, (jx1 - jx0 - span) / 2.0)
+    y_face = jy_in - 0.4
+    placed = [
+        _place_one_footprint("Q5", geoms, xq, y_face - qh, 0.0),
+        _place_one_footprint("D5", geoms, xq + qw + gap, y_face - dh, 0.0),
+    ]
+    label = "MOS"
+    tsz = 0.75
+    tw = _silk_text_width(label, tsz)
+    label_y = y_face - qh - 1.25
+    _uid, silk = gr_text(label, xq + qw / 2.0 - tw / 2.0, label_y, tsz, truetype=True)
+    y = label_y - 0.7
+    x = col.x0 + 0.3
+    x_lim = col.x1 - 0.25
+    row_h = 0.0
+    for ref in ("R13", "R14", "D19", "R28"):
+        w, h = _fp_size(ref, geoms)
+        if x + w > x_lim and x > col.x0 + 0.4:
+            x = col.x0 + 0.3
+            y -= row_h + 0.4
+            row_h = 0.0
+        placed.append(_place_one_footprint(ref, geoms, x, y - h, 0.0))
+        x += w + 0.45
+        row_h = max(row_h, h)
+    return placed, [silk]
+
+
+def _esp32_pad_local(pin: int) -> tuple[float, float]:
+    """DevKitC 2×19: pin 1 at local (−12.7, 0), pin 19 toward USB (−Y)."""
+    if pin <= 19:
+        return -12.7, -(pin - 1) * 2.54
+    return 12.7, -(pin - 20) * 2.54
+
+
+# Đèn trạng thái và trở hạn dòng. Trở không đứng cùng hàng với đèn.
+_LAMP_PAIRS: tuple[tuple[str, str], ...] = (
+    ("D14", "R23"),
+    ("D15", "R24"),
+    ("D16", "R25"),
+    ("D17", "R26"),
+    ("D18", "R27"),
+    ("D19", "R28"),
+    ("D20", "R29"),
+    ("D21", "R30"),
+    ("D22", "R31"),
+    ("D23", "R32"),
+    ("D24", "R33"),
+)
+
+
+def _boxes_hit(bb: tuple[float, float, float, float], parts: list[Placed], gap: float = 0.25) -> bool:
+    x0, y0, x1, y1 = bb
+    for p in parts:
+        a = p.bbox
+        if x1 + gap <= a[0] or a[2] + gap <= x0 or y1 + gap <= a[1] or a[3] + gap <= y0:
+            continue
+        return True
+    return False
+
+
+def separate_lamp_resistors(placements: list[Placed], geoms: dict) -> None:
+    """Move each series resistor off the LED's row, into the inward gap."""
+    by = {p.ref: p for p in placements}
+    for led_ref, res_ref in _LAMP_PAIRS:
+        led = by.get(led_ref)
+        res = by.get(res_ref)
+        if led is None or res is None:
+            continue
+        y_over = min(led.bbox[3], res.bbox[3]) - max(led.bbox[1], res.bbox[1])
+        gap_x = max(led.bbox[0], res.bbox[0]) - min(led.bbox[2], res.bbox[2])
+        if not (y_over > 0.4 and gap_x < 2.0):
+            continue
+        w, h = _fp_size(res_ref, geoms)
+        cx = (led.bbox[0] + led.bbox[2]) / 2.0
+        inward_down = (led.bbox[1] + led.bbox[3]) / 2.0 < BOARD_H / 2.0
+        others = [p for p in placements if p.ref != res_ref]
+        chosen: tuple[float, float] | None = None
+        for gap in (2.4, 1.6, 3.4, 0.7, 4.6, 6.0):
+            for dx in (0.0, 2.2, -2.2, 4.4, -4.4):
+                x = cx - w / 2.0 + dx
+                y = led.bbox[3] + gap if inward_down else led.bbox[1] - gap - h
+                bb = (x, y, x + w, y + h)
+                if bb[0] < 1.0 or bb[2] > BOARD_W - 1.0 or bb[1] < 1.0 or bb[3] > BOARD_H - 1.0:
+                    continue
+                if _boxes_hit(bb, others):
+                    continue
+                chosen = (x, y)
+                break
+            if chosen:
+                break
+        if chosen is None:
+            print(f"WARN {res_ref} stays beside {led_ref}")
+            continue
+        moved = _place_one_footprint(res_ref, geoms, chosen[0], chosen[1], 0.0)
+        placements[placements.index(res)] = moved
+        by[res_ref] = moved
+
+
+def layout_j1_series_resistor(placements: list[Placed], geoms: dict) -> list[Placed]:
+    """R22 in the gap above F1. Only D13 stays on the jack row."""
+    d13 = next(p for p in placements if p.ref == "D13")
+    f1 = next(p for p in placements if p.ref == "F1")
+    w, h = _fp_size("R22", geoms)
+    x = (d13.bbox[0] + d13.bbox[2]) / 2.0 - w / 2.0
+    y = f1.bbox[1] - 0.35 - h
+    if y < d13.bbox[3] + 0.8:
+        print("WARN R22 does not fit between D13 and F1")
+        return []
+    return [_place_one_footprint("R22", geoms, x, y, 0.0)]
+
+
+def layout_esp32_pocket(placements: list[Placed], geoms: dict) -> list[Placed]:
+    """Pulldowns and GPIO series resistors between the two DevKit header rows."""
+    u1 = next(p for p in placements if p.ref == "U1")
+    # Top header (pin 1 side): fiber PWM and the two pulldowns. Bottom header: RX and UART.
+    # Place the antenna-side pin first so a clash shifts the next part toward USB.
+    near = [
+        ("R40", 7),
+        ("R41", 8),
+        ("R20", 9),
+        ("R21", 10),
+        ("R44", 21),
+        ("R45", 31),
+        ("R42", 32),
+        ("R43", 35),
+    ]
+    w, h = _fp_size(near[0][0], geoms)
+    ant_x0 = u1.x + rot_pt(0.0, -0.6, u1.rot)[0]
+    out: list[Placed] = []
+    for ref, pin in near:
+        lx, ly = _esp32_pad_local(pin)
+        rx, ry = rot_pt(lx, ly, u1.rot)
+        px, py = u1.x + rx, u1.y + ry
+        inward = -1.0 if py > u1.y else 1.0
+        y_edge = py + inward * (0.85 + 1.15)
+        y0 = y_edge - h if inward < 0 else y_edge
+        x0 = px - w / 2.0
+        placed = None
+        for _ in range(24):
+            trial = _place_one_footprint(ref, geoms, x0, y0, 0.0)
+            clear = trial.bbox[2] <= ant_x0 - 0.3 and not _boxes_hit(trial.bbox, out, 0.25)
+            if clear:
+                placed = trial
+                break
+            x0 -= 0.5
+        if placed is None:
+            print(f"WARN {ref} does not fit in the ESP32 pin gap")
+            continue
+        out.append(placed)
+    return out
+
+
+def layout_logic_spread(
+    columns: list[IoColumn], placements: list[Placed], geoms: dict
+) -> list[Placed]:
+    """RS485 transceiver in the widened J8 column, under the module."""
+    by_col = {c.ref: c for c in columns}
+    u1 = next(p for p in placements if p.ref == "U1")
+    out: list[Placed] = []
+
+    def open_top(col: IoColumn) -> float:
+        """Smallest y of a part already in the column, below the module."""
+        y_hit = 71.2
+        for p in placements:
+            if p.bbox[2] <= col.x0 + 0.2 or p.bbox[0] >= col.x1 - 0.2:
+                continue
+            if p.bbox[1] > u1.bbox[3]:
+                y_hit = min(y_hit, p.bbox[1])
+        return y_hit
+
+    j8 = by_col["J8"]
+    uw, uh = _fp_size("U7", geoms)
+    uy = u1.bbox[3] + 0.5
+    if uy + uh < open_top(j8) - 0.3:
+        ux = j8.x0 + max(0.4, (j8.x1 - j8.x0 - uw) / 2.0)
+        out.append(_place_one_footprint("U7", geoms, ux, uy, 0.0))
+    return out
 
 
 def build_layout(refs_with_fp: dict[str, str], load_mod) -> tuple[list[Placed], list[str], list[str]]:
@@ -1086,6 +1456,11 @@ def build_layout(refs_with_fp: dict[str, str], load_mod) -> tuple[list[Placed], 
         | STACK_REFS
         | LAYOUT_FIXED_REFS
         | SHARED_LAYOUT_REFS
+        | MCU_SPREAD_REFS
+        | RELAY_AT_JACK_REFS
+        | VALVE_AT_JACK_REFS
+        | POWER_DEBUG_REFS
+        | J1_SERIES_REFS
     )
     missing = sorted(set(refs_with_fp) - zoned)
     if missing:
@@ -1132,26 +1507,23 @@ def build_layout(refs_with_fp: dict[str, str], load_mod) -> tuple[list[Placed], 
         zone_members.setdefault(gname, [])
         zone_members[gname].extend(members)
 
+    debug_placed, debug_silk = layout_power_debug_leds(placements, geoms)
+    placements += debug_placed
+    graphics.extend(debug_silk)
+    placements += layout_relay_at_jacks(edge_placed, edge_columns, geoms, placements)
+    valve_placed, valve_silk = layout_valve_at_jack(edge_placed, edge_columns, geoms)
+    placements += valve_placed
+    graphics.extend(valve_silk)
     conn_placed, _conn_zones = layout_connector_zones(
         edge_columns, edge_placed, geoms, CONNECTOR_ANCHORS, blockers=placements
     )
     placements += conn_placed
+    placements += layout_j1_series_resistor(placements, geoms)
+    placements += layout_esp32_pocket(placements, geoms)
+    placements += layout_logic_spread(edge_columns, placements, geoms)
+    separate_lamp_resistors(placements, geoms)
 
     graphics.extend(assembly_zone_graphics(placements))
-
-    # ESP32 USB end (pads 19/38 side), guidance for the programming cable
-    u1 = next((p for p in placements if p.ref == "U1"), None)
-    if u1:
-        for tu, ts in esp32_antenna_silk(u1):
-            graphics.append(ts)
-            zone_members.setdefault("MCU_SIGNAL", []).append(tu)
-    if u1 and "19" in u1.pads and "38" in u1.pads:
-        ux = (u1.pads["19"][0] + u1.pads["38"][0]) / 2
-        uy = (u1.pads["19"][1] + u1.pads["38"][1]) / 2
-        dx, dy = rot_pt(0, -5.0, u1.rot)
-        tu, ts = gr_text("USB", ux + dx, uy + dy, TEXT_SIZE)
-        graphics.append(ts)
-        zone_members.setdefault("MCU_SIGNAL", []).append(tu)
 
     return placements, graphics, zone_members
 

@@ -29,11 +29,11 @@ def _sym_header(name: str, ref: str, footprint: str, descr: str, keywords: str) 
 \t\t(on_board yes)
 \t\t(property "Reference" "{ref}"
 \t\t\t(at 0 0 0)
-\t\t\t(effects (font (size 1.27 1.27)))
+\t\t\t(effects (font (size 1.27 1.27)) (hide yes))
 \t\t)
 \t\t(property "Value" "{short}"
 \t\t\t(at 0 0 0)
-\t\t\t(effects (font (size 1.27 1.27)))
+\t\t\t(effects (font (size 1.27 1.27)) (hide yes))
 \t\t)
 \t\t(property "Footprint" "{footprint}"
 \t\t\t(at 0 0 0)
@@ -111,10 +111,6 @@ def esp32_devkitc_socket(prefix: str = "") -> str:
 \t\t\t\t(stroke (width 0.15) (type default))
 \t\t\t\t(fill (type none))
 \t\t\t)
-\t\t\t(text "USB"
-\t\t\t\t(at 0 {body_bot + 1.5} 0)
-\t\t\t\t(effects (font (size 1.27 1.27)))
-\t\t\t)
 \t\t)
 \t\t(symbol "{name.split(":")[-1]}_1_1"
 {chr(10).join(pins)}
@@ -142,8 +138,6 @@ def fiber_clamp_2ch(prefix: str = "") -> str:
 \t\t\t\t(stroke (width 0.254) (type default))
 \t\t\t\t(fill (type background))
 \t\t\t)
-\t\t\t(text "FIBER1" (at -6 4 0) (effects (font (size 1.016 1.016))))
-\t\t\t(text "FIBER2" (at 6 4 0) (effects (font (size 1.016 1.016))))
 \t\t)
 \t\t(symbol "{name.split(":")[-1]}_1_1"
 {chr(10).join(pins)}
@@ -226,7 +220,6 @@ def relay_g5le1(prefix: str = "") -> str:
 \t\t\t\t(stroke (width 0.254) (type default))
 \t\t\t\t(fill (type background))
 \t\t\t)
-\t\t\t(text "G5LE-1" (at 0 8.5 0) (effects (font (size 1.27 1.27))))
 \t\t)
 \t\t(symbol "{name.split(":")[-1]}_1_1"
 {chr(10).join(pins)}
@@ -351,7 +344,6 @@ def afbr_1624z(prefix: str = "") -> str:
 \t\t\t\t(stroke (width 0.254) (type default))
 \t\t\t\t(fill (type none))
 \t\t\t)
-\t\t\t(text "POF" (at 0 -8.89 0) (effects (font (size 1.016 1.016))))
 \t\t)
 \t\t(symbol "{name.split(":")[-1]}_1_1"
 {chr(10).join(pins)}
@@ -383,7 +375,6 @@ def afbr_2624z(prefix: str = "") -> str:
 \t\t\t\t(stroke (width 0.254) (type default))
 \t\t\t\t(fill (type none))
 \t\t\t)
-\t\t\t(text "POF" (at 0 -8.89 0) (effects (font (size 1.016 1.016))))
 \t\t)
 \t\t(symbol "{name.split(":")[-1]}_1_1"
 {chr(10).join(pins)}
@@ -409,7 +400,6 @@ def cm_choke_4(prefix: str = "") -> str:
 \t\t\t\t(stroke (width 0.254) (type default))
 \t\t\t\t(fill (type background))
 \t\t\t)
-\t\t\t(text "CM" (at 0 0 0) (effects (font (size 1.27 1.27))))
 \t\t)
 \t\t(symbol "{name.split(":")[-1]}_1_1"
 {chr(10).join(pins)}

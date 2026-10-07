@@ -13,21 +13,21 @@ Nguồn và mass
 - VIN J1 9–24 V → F1 (giá cầu chì 5×20, ống F4A thay tay) → L2 → RV1/D7 → Q12 → C4 → U2 buck → FB2/C22 → +5V
   → U3/FB1 → +3V3
 - Điểm sao mass: NT1 (GND_PWR ↔ GND_SPLICE); D11 + C23; FB3 → GND logic
-- +5V_RLY: FB4 → F2 (5×20 F0,5A) → D12/C24/C25 → K1/K2 (flyback D3/D4)
-- +24V_SOL: F3 (5×20 F0,25A) → J7 van (flyback D5); Q5 cắt mass phía âm
+- Relay: mỗi cọc một group đủ mạch. J5 = FB4 → D12/C24/C25 → K1 (D3, Q3). J6 = FB5 → D26/C26/C27 → K2 (D4, Q4). Xóa một group không cắt nguồn relay còn lại hay phần còn lại của bo. Không cầu chì riêng trên cuộn
+- Van: J7 lấy +24V sau F1 (flyback D5); Q5 cắt mass phía âm. Không cầu chì riêng trên van
 - Không DC-DC cách ly; đầu vào quang PC817; RS485 TVS D9/D10, R18/R19
 
 Pour mass (đồng)
 ----------------
-- GND_PWR: cột bảo vệ + buck + công suất + domino trái (mass về J1, J5–J7)
-- GND: cột MCU_SIGNAL + I/O phải
+- GND_PWR: cột trái (bảo vệ, buck) và giắc trên J1, J3, J4
+- GND: cột MCU + hàng dưới bên phải (J2 cấp bàn phím, J5–J7, J8)
 - Nối pour: chỉ NT1 (+ D11/C23/FB3 trên sơ đồ)
 
 Layout PCB 118×84 mm (hộp PLC 145×90×40, giắc trên cạnh dài)
 ----------------------------------------------------------
-- Cạnh dài trên (vào): J1 nguồn 24 V, J3 chân, J4 NPN, F1T/F1R, F2T/F2R
-- Cạnh dài dưới (ra): J5 relay, J6 relay, J7 van, J2 cấp 24 V keyboard, J8 RS485
-- Trong lòng: nguồn + relay bên trái; ESP32 nằm ngang bên phải. Nhóm lắp ráp giữ nguyên.
+- Cạnh dài trên: J1 nguồn vào 24 V, J3 chân, J4 NPN, rồi F1T/F1R, F2T/F2R
+- Cạnh dài dưới, trái → phải: J5 relay 1, J6 relay 2, J7 van, J2 (24 V ra cho bàn phím), J8 RS485. Giắc giãn trên suốt cạnh; cột group đông linh kiện (relay, van, RS485, opto) rộng hơn cột cọc ít linh kiện.
+- Trong lòng, trái → phải: cột **PWR_24V_PROTECT** (F1 đến sao mass, tụ C19/C15/C14 và R17 sát nút lọc) rồi cột **PWR_BUCK** (C16/C17 sát U2, C2/C5 sát ra 5 V, R36–R38 sát chân FB/EN).
 - 145T-1D là lỗ 1 phía (khoảng 20P trên một cạnh dài). Hàng ra ở cạnh dài đối diện cần bản lỗ 2 phía hoặc khoét thêm.
 
 I/O
@@ -35,6 +35,7 @@ I/O
 - Relay G6KU J5/J6; solenoid J7; FOOT/NPN J3/J4 (opto); RS485 J8 2EDG5.08
 - Quang 2 kênh AFBR trên bo; sợi POF 1 mm; C12/C13 lọc nguồn cục bộ
 - Flyback: D3/D4 relay 5 V; D5 solenoid 24 V
+- Đèn SMD 0805 sát giắc, không thêm GPIO: D13 có điện ở J1; D14 rail +24 V ở J2; D15/D16 sáng khi chân/NPN tác động; D17/D18 sáng khi cuộn relay bật; D19 sáng khi van bật; D20 sáng khi DE RS485 bật; D21–D24 sáng khi chân quang mức cao. Debug nguồn nằm trong cột nguồn: D27 (+24 V sau C4, mass nguồn) tắt thì lỗi trước buck; D25 (+5V_RAW cạnh C2) tắt thì buck không ra; D6 (+3V3 cạnh U3) tắt thì LDO không ra. Trở 1 kΩ ở 3,3 V/5 V; 10 kΩ ở 24 V.
 
 GPIO (ESP32)
 ------------
@@ -44,14 +45,14 @@ IO27/14 relay | IO13 solenoid | IO16/17/23 RS485 | IO21/22 I2C (không header OL
 Quang 2 kênh (POF 1 mm)
 -----------------------
 - Phát AFBR-1624Z (F1T/F2T) và thu AFBR-2624Z (F1R/F2R) cùng cạnh dài trên
-- IO32/IO33 LEDC → DATA_IN phát | DATA_OUT thu → IO4/IO15
+- IO32/IO33 LEDC → R40/R41 → DATA_IN phát | DATA_OUT thu → R42/R43 → IO4/IO15. IO23/IO16 qua R44/R45 tới DI/RO MAX485.
 - C12/C13 100 nF mỗi kênh; không kẹp J2/J11; không khuếch đại ngoài
 
 PCB / vỏ / gia công
 -------------------
 - Edge.Cuts 118×84 mm (vỏ 145×90×40, lòng thân ~125×90; giắc dọc cạnh 145 mm)
 - 2 lớp FR4 1,6 mm; sâu hộp 40 mm — kiểm tra đế + DevKitC không chạm nắp
-- Silk: nhãn tiếng Việt sát giắc (pcb_layout.py IO_LABELS)
+- Nhãn chữ (giắc, nhóm, R/C, 24V/5V/3V3) nằm trên lớp F.Fab: thấy trong KiCad, không in lên bo. Mực in gia công chỉ lấy F.SilkS (viền linh kiện). Điện trở hiện "R" + trị số, tụ hiện "C" + trị số. Nút anode đèn đặt tên *_AN.
 
 Quy trình
 ---------

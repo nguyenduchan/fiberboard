@@ -15,6 +15,12 @@ from pcb_layout import (  # noqa: E402
     BOARD_H,
     BOARD_W,
     LAYOUT_FIXED_REFS,
+    MCU_SPREAD_REFS,
+    RELAY_AT_JACK_REFS,
+    ESP32_POCKET_REFS,
+    J1_SERIES_REFS,
+    POWER_DEBUG_REFS,
+    VALVE_AT_JACK_REFS,
     ZONES,
     build_layout,
     footprint_geometry,
@@ -61,6 +67,11 @@ def main() -> int:
         | STACK_REFS
         | LAYOUT_FIXED_REFS
         | SHARED_LAYOUT_REFS
+        | MCU_SPREAD_REFS
+        | RELAY_AT_JACK_REFS
+        | VALVE_AT_JACK_REFS
+        | POWER_DEBUG_REFS
+        | J1_SERIES_REFS
     )
     missing = sorted(set(comps) - zoned)
     if missing:
@@ -72,6 +83,9 @@ def main() -> int:
         if x0 < 0 or y0 < 0 or x1 > BOARD_W or y1 > BOARD_H:
             errors.append(f"{p.ref} outside Edge.Cuts {p.bbox}")
         for q in placements[i + 1 :]:
+            pair = {p.ref, q.ref}
+            if "U1" in pair and (pair - {"U1"}) <= ESP32_POCKET_REFS:
+                continue
             if _bbox_overlap(p.bbox, q.bbox):
                 overlaps.append((p.ref, q.ref))
     if overlaps:

@@ -10,24 +10,24 @@ Mục tiêu: hàn tay / SMT lô nhỏ với ít mã SMD thụ động. Số lư�
 
 | Mã gộp | Giá trị / loại | Số lượng | Ref tiêu biểu | Không gộp được (giữ riêng) |
 |--------|----------------|----------|---------------|------------------------------|
-| R-1k | 1 kΩ 0805 | 7 | R7,R8,R11,R12,R16,R37 | |
-| R-10k | 10 kΩ 0805 | 5 | R9,R10,R14,R38 | |
+| R-1k | 1 kΩ 0805 | 22 | R7,R8,R11,R12,R16,R24–R27,R29–R34,R37,R40–R45 | Đèn 3,3 V/5 V, kênh logic, nối tiếp GPIO |
+| R-10k | 10 kΩ 0805 | 8 | R9,R10,R14,R22,R23,R28,R38,R39 | R22/R23/R28/R39 đèn 24 V |
 | R-100 | 100 Ω 0805 | 2 | R13,R15 | R15: termination RS485 ngắn (≈120 Ω → 100 Ω) |
 | R-10 | 10 Ω 0805 | 2 | R18,R19 | RS485 series |
 | R-100k | 100 kΩ 0805 | 1 | R17 | Cổng Q12 |
 | R-3k | 3 kΩ 0805 | 1 | R36 | FB XL1509 — không đổi |
-| C-100n | 100 nF 0805 | 13 | C5,C12–C18,C21,C23,C25… | Gồm C23 ‖ D11 (trước 10 nF) |
+| C-100n | 100 nF 0805 | 14 | C5,C12–C18,C21,C23,C25,C27 | Gồm C23 ‖ D11; C25/C27 lọc từng relay |
 | C-10u25 | 10 µF 0805 ≥25 V | 3 | C16,C19,C7 | Vin 24 V / buck / LDO in |
 | C-22u10 | 22 µF 0805 ≥10 V | 1 | C3 | Ra AMS1117 (datasheet) |
-| C-elec220 | 220 µF 6,3–10 V radial SMD | 3 | C2,C22,C24 | C24 nhánh +5V_RLY |
+| C-elec220 | 220 µF 6,3–10 V radial SMD | 4 | C2,C22,C24,C26 | C24 relay 1, C26 relay 2 |
 | C-elec1000 | 1000 µF 25 V | 1 | C4 | |
 | D-SS34 | SS34 SOD-123 | 4 | D3,D4,D5,D8 | Flyback + buck |
 | D-TVS28 | SMAJ28A SMA | 1 | D7 | VIN |
-| D-TVS5 | SMAJ5.0A SMA | 4 | D9–D12 | 5 V, mass splice, +5V_RLY, RS485 |
-| FB-BLM | BLM21PG121 0805 | 4 | FB1–FB4 | |
+| D-TVS5 | SMAJ5.0A SMA | 5 | D9–D12,D26 | D12 relay 1, D26 relay 2, RS485, mass |
+| FB-BLM | BLM21PG121 0805 | 5 | FB1–FB5 | FB4 relay 1, FB5 relay 2 |
 | Q-2N3904 | 2N3904 SOT-23 | 2 | Q3,Q4 | |
-| Fuse-holder | Giá 5×20 PCB | 3 | F1–F3 | |
-| Fuse-tube | ống 5×20 | 3 loại | F4A, F0,5A, F0,25A | Ba dòng cầu chì (cùng kích thước) |
+| Fuse-holder | Giá 5×20 PCB | 1 | F1 | Chỉ nguồn tổng 24 V |
+| Fuse-tube | ống 5×20 F4A | 1 | F1 | |
 
 IC / cơ khí / quang: XL1509, AMS1117, AO4407A, AO3400A, MAX485, PC817×2, G6KU×2, ACM2012, MOV, domino 2EDG, AFBR×4, giá ESP32 — mỗi loại một mã.
 
@@ -38,9 +38,9 @@ Tóm tắt theo khối
 ----------------
 | Khối | Số dòng linh kiện (loại) | Thấp (k) | Cao (k) |
 |------|---------------------------|----------|---------|
-| PWR_24V_PROTECT | 14 | 45 | 85 |
-| PWR_BUCK (+ F2 trên sơ đồ) | 20 | 55 | 95 |
-| PWR_24V_OUT | 14 | 65 | 120 |
+| PWR_24V_PROTECT | 16 | 46 | 88 |
+| PWR_BUCK | 23 | 53 | 91 |
+| J5 + J6 + J7 | 14 | 65 | 120 |
 | MCU (chỉ socket U1) | 1 | 18 | 40 |
 | Quang 2 kênh | 6 | 220 | 480 |
 | Đầu vào FOOT/NPN | 8 | 25 | 45 |
@@ -48,12 +48,12 @@ Tóm tắt theo khối
 | Solenoid + J7 | 7 | 20 | 38 |
 | RS485 + LED + J8 | 8 | 22 | 42 |
 | Domino còn lại (J1,J3) | 2 | 6 | 14 |
-| **Tổng linh kiện trên PCB** | **~88 chỗ hàn** | **~530** | **~1.060** |
+| **Tổng linh kiện trên PCB** | **~90 chỗ hàn** | **~531** | **~1.063** |
 | ESP32-DevKitC (lắp socket, mua riêng) | 1 | 90 | 185 |
 | PCB 2L 172×98 mm (5–10 bo) | 1 | 25 | 120 |
-| **Tổng lắp 1 máy (có DevKit, có PCB)** | | **~645** | **~1.365** |
+| **Tổng lắp 1 máy (có DevKit, có PCB)** | | **~646** | **~1.368** |
 
-Nguồn 24 V ≥ 1,5–2 A (tủ): 150–400k. Bộ cầu chì dự phòng F4A/F0,5A/F0,25A: ~5–15k.
+Nguồn 24 V ≥ 1,5–2 A (tủ): 150–400k. Ống cầu chì dự phòng F4A (chỉ F1): ~5–15k.
 
 
 Bảng chi tiết — Nguồn vào & bảo vệ (PWR_24V_PROTECT)
@@ -71,6 +71,8 @@ Bảng chi tiết — Nguồn vào & bảo vệ (PWR_24V_PROTECT)
 | 1 | R17 | 100 kΩ | 0805 | 200 | 500 | Cổng Q12 |
 | 1 | C4 | 1000 µF 25 V | CP_Elec 10×12,5 | 8.000 | 18.000 | Bulk |
 | 1 | C14 | 100 nF | 0805 | 200 | 600 | |
+| 1 | R39 | 10 kΩ | 0805 | 200 | 500 | Đèn debug +24 V (gộp R-10k) |
+| 1 | D27 | LED 24V | LED 0805 | 500 | 2.000 | Sáng khi +24 V sau bảo vệ còn điện |
 | 1 | NT1 | GND_STAR | NetTie-2 SMD | 0 | 1.000 | Pad nối mass |
 | 1 | D11 | SMAJ5.0A | D_SMA | 1.000 | 3.000 | Mass GND_PWR↔splice |
 | 1 | C23 | 100 nF | 0805 | 200 | 600 | ‖ D11 (gộp mã C-100n) |
@@ -88,17 +90,16 @@ Bảng chi tiết — Buck, LDO, nhánh relay (PWR_BUCK)
 | 1 | L1 | 47 µH | 1210 | 4.000 | 12.000 | |
 | 1 | C2 | 220 µF 6,3–10 V | CP_Elec 6,3×5,4 | 4.000 | 10.000 | Ra buck |
 | 1 | C5 | 100 nF | 0805 | 200 | 600 | |
+| 1 | R34 | 1 kΩ | 0805 | 200 | 500 | Đèn debug +5V_RAW |
+| 1 | D25 | LED 5V | LED 0805 | 500 | 2.000 | Sáng khi buck ra 5 V; tắt thì buck lỗi |
 | 1 | R36 | 3 kΩ | 0805 | 200 | 500 | FB U2 |
 | 1 | R37 | 1 kΩ | 0805 | 200 | 500 | |
 | 1 | R38 | 10 kΩ | 0805 | 200 | 500 | EN |
 | 1 | FB2 | BLM21PG121 | 0805 | 800 | 2.500 | +5V_RAW→+5V |
 | 1 | C22 | 220 µF | CP_Elec 6,3×5,4 | 4.000 | 10.000 | Rail +5V |
-| 1 | FB4 | BLM21PG121 | 0805 | 800 | 2.500 | → nhánh relay |
-| 1 | F2 | Giá 5×20 + F0,5A | Fuseholder_5x20mm | 4.000 | 9.000 | +5V_RLY |
-| 1 | D12 | SMAJ5.0A | D_SMA | 1.000 | 3.000 | TVS +5V_RLY |
-| 1 | C24 | 220 µF 6,3–10 V | CP_Elec 6,3×5,4 | 4.000 | 10.000 | Cùng mã C2/C22 |
-| 1 | C25 | 100 nF | 0805 | 200 | 600 | |
 | 1 | U3 | AMS1117-3.3 | SOT-223 | 2.000 | 6.000 | 3,3 V |
+| 1 | R16 | 1 kΩ | 0805 | 200 | 500 | Đèn debug +3V3 |
+| 1 | D6 | LED 3V3 | LED 0805 | 500 | 2.000 | Sáng khi LDO ra 3,3 V; tắt trong khi D25 sáng thì lỗi LDO |
 | 1 | C7 | 10 µF | 0805 | 300 | 1.000 | |
 | 1 | C3 | 22 µF | 0805 | 400 | 1.500 | |
 | 1 | C18 | 100 nF | 0805 | 200 | 600 | |
@@ -106,26 +107,45 @@ Bảng chi tiết — Buck, LDO, nhánh relay (PWR_BUCK)
 | 1 | C21 | 100 nF | 0805 | 200 | 600 | |
 
 
-Bảng chi tiết — Công suất (PWR_24V_OUT)
----------------------------------------
+Dòng tóm tắt PWR_BUCK vẫn tính FB4, D12, C24, C25. Trên bo các ref đó thuộc group J5.
+
+Bảng chi tiết — J5 relay 1 (OPT_J5_RLY1)
+------------------------------------------
 | Qty | Ref | Giá trị | Footprint | Thấp | Cao | Ghi chú |
 |-----|-----|---------|-----------|------|-----|---------|
-| 1 | K1 | G6KU-2F-Y | G6KU-2F_SMD | 22.000 | 45.000 | Relay 1 |
-| 1 | K2 | G6KU-2F-Y | G6KU-2F_SMD | 22.000 | 45.000 | Relay 2 |
-| 1 | Q3 | 2N3904 | SOT-23 | 300 | 800 | Driver K1 |
-| 1 | Q4 | 2N3904 | SOT-23 | 300 | 800 | Driver K2 |
-| 1 | D3 | SS34 | SOD-123 | 400 | 1.200 | Flyback K1 (gộp D-SS34) |
-| 1 | D4 | SS34 | SOD-123 | 400 | 1.200 | Flyback K2 |
-| 1 | R11 | 1 kΩ | 0805 | 200 | 500 | |
-| 1 | R12 | 1 kΩ | 0805 | 200 | 500 | |
 | 1 | J5 | RLY1 2EDG 3P | Terminal 3P | 4.000 | 9.000 | |
+| 1 | K1 | G6KU-2F-Y | G6KU-2F_SMD | 22.000 | 45.000 | Relay 1 |
+| 1 | Q3 | 2N3904 | SOT-23 | 300 | 800 | Driver K1 |
+| 1 | D3 | SS34 | SOD-123 | 400 | 1.200 | Flyback K1 (gộp D-SS34) |
+| 1 | R11 | 1 kΩ | 0805 | 200 | 500 | |
+| 1 | FB4 | BLM21PG121 | 0805 | 800 | 2.500 | Nhánh +5V_RLY1 |
+| 1 | D12 | SMAJ5.0A | D_SMA | 1.000 | 3.000 | TVS nhánh J5 |
+| 1 | C24 | 220 µF 6,3–10 V | CP_Elec 6,3×5,4 | 4.000 | 10.000 | Cùng mã C2/C22 |
+| 1 | C25 | 100 nF | 0805 | 200 | 600 | |
+
+Bảng chi tiết — J6 relay 2 (OPT_J6_RLY2)
+------------------------------------------
+| Qty | Ref | Giá trị | Footprint | Thấp | Cao | Ghi chú |
+|-----|-----|---------|-----------|------|-----|---------|
 | 1 | J6 | RLY2 2EDG 3P | Terminal 3P | 4.000 | 9.000 | |
-| 1 | F3 | Giá 5×20 + F0,25A | Fuseholder_5x20mm | 4.000 | 9.000 | +24V_SOL |
+| 1 | K2 | G6KU-2F-Y | G6KU-2F_SMD | 22.000 | 45.000 | Relay 2 |
+| 1 | Q4 | 2N3904 | SOT-23 | 300 | 800 | Driver K2 |
+| 1 | D4 | SS34 | SOD-123 | 400 | 1.200 | Flyback K2 |
+| 1 | R12 | 1 kΩ | 0805 | 200 | 500 | |
+| 1 | FB5 | BLM21PG121 | 0805 | 800 | 2.500 | Nhánh +5V_RLY2, cùng đơn giá FB4 |
+| 1 | D26 | SMAJ5.0A | D_SMA | 1.000 | 3.000 | TVS nhánh J6, cùng đơn giá D12 |
+| 1 | C26 | 220 µF 6,3–10 V | CP_Elec 6,3×5,4 | 4.000 | 10.000 | Cùng mã C24 |
+| 1 | C27 | 100 nF | 0805 | 200 | 600 | Cùng mã C25 |
+
+Bảng chi tiết — J7 van (OPT_J7_SOL)
+------------------------------------
+| Qty | Ref | Giá trị | Footprint | Thấp | Cao | Ghi chú |
+|-----|-----|---------|-----------|------|-----|---------|
+| 1 | J7 | SOL 2EDG 2P | Terminal 2P | 3.000 | 8.000 | |
 | 1 | Q5 | AO3400A | SOT-23 | 1.000 | 3.000 | Van |
 | 1 | D5 | SS34 | D_SMA | 800 | 2.000 | Flyback van |
 | 1 | R13 | 100 Ω | 0805 | 200 | 500 | Cổng Q5 |
-| 1 | R14 | 10 kΩ | 0805 | 200 | 500 | Kéo xuống |
-| 1 | J7 | SOL 2EDG 2P | Terminal 2P | 3.000 | 8.000 | |
+| 1 | R14 | 10 kΩ | 0805 | 200 | 500 | Kéo xuống | |
 
 
 Bảng chi tiết — MCU, quang, tín hiệu (MCU_SIGNAL)
@@ -156,8 +176,7 @@ Bảng chi tiết — MCU, quang, tín hiệu (MCU_SIGNAL)
 | 1 | D9 | SMAJ5.0A | D_SMA | 1.000 | 3.000 | TVS A (gộp D-TVS5) |
 | 1 | D10 | SMAJ5.0A | D_SMA | 1.000 | 3.000 | TVS B |
 | 1 | J8 | RS485 2EDG 3P | Terminal 3P | 4.000 | 9.000 | |
-| 1 | R16 | 1 kΩ | 0805 | 200 | 500 | LED |
-| 1 | D6 | LED STATUS | LED 0805 | 500 | 2.000 | |
+| 12 | D13–D24 | LED 0805 | LED_0805 | 500 | 2.000 | Sát giắc J1–J8 và 4 mắt quang; cùng đơn giá D6 |
 
 
 Linh kiện không hàn (mua kèm khi lắp máy)
@@ -166,7 +185,7 @@ Linh kiện không hàn (mua kèm khi lắp máy)
 |-----|--------|------|-----|
 | 1 | ESP32-DevKitC-32E (cắm U1) | 90.000 | 185.000 | 38 chân, WROOM-32E, USB trên module |
 | 1 | Nguồn 24 VDC 1,5–2 A DIN | 150.000 | 400.000 | Tủ điện |
-| 4 | Ống cầu chì 5×20 dự phòng | 3.000 | 12.000 | F4A, F0,5A, F0,25A |
+| 2 | Ống cầu chì 5×20 F4A dự phòng | 3.000 | 12.000 | Chỉ F1 |
 | 8 | Đầu đực 2EDG field | 20.000 | 50.000 | Theo J1–J8 |
 | 2 | Sợi POF 1 mm (tùy chiều dài) | 10.000 | 40.000 | Quang |
 
@@ -175,5 +194,5 @@ Ghi chú đặt hàng
 ----------------
 - SMD 0805/1206, SOIC, SOT: có thể dùng bộ linh kiện rời hoặc SMT JLC (chưa tính trong bảng trên).
 - AFBR: giá biến động mạnh; có thể thay footprint tương thích 1629Z/2529Z nếu shop có.
-- Tổng **chỉ linh kiện bo** (không DevKit, không PCB): cộng cột Thấp/Cao bảng chi tiết ≈ **530k–1.060k VND**.
-- Khối nguồn (protect+buck+phần F2/D12/C24 trong buck + công suất F3/Q5/D5): ≈ **165k–300k VND** (không relay).
+- Tổng **chỉ linh kiện bo** (không DevKit, không PCB): cộng cột Thấp/Cao bảng chi tiết ≈ **531k–1.063k VND**, chưa gồm 12 đèn giắc mới. 12 LED đó cùng đơn giá D6 (0,5–2k) và trở 1 kΩ/10 kΩ đã có trong bảng gộp: thêm khoảng **8k–30k**. D27/R39 debug +24 V nằm trong bảng bảo vệ (0,7–2,5k, đã cộng vào tổng). R40–R45 (6×1 kΩ, cùng đơn giá 200–500) thêm khoảng **1,2–3k**, đã nằm trong dòng R-1k.
+- Khối nguồn (protect + buck): ≈ **165k–300k VND** kể cả FB4/D12/C24 từng nằm trong dòng buck. Relay và van tính ở group J5, J6, J7.

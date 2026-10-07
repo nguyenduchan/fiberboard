@@ -64,8 +64,7 @@ def emit_connected_schematic(
             18,
         ),
         text_box("POWER / 24V IN PROTECT", 18, 20),
-        text_box("J1->F1->L2->RV1/D7->Q12->C4 1mF | U2 XL1509 buck | C2/C22 5V bulk | U3 3.3V", 18, 24),
-        text_box("ESP32", 55, 95),
+        text_box("J1->F1->L2->RV1/D7->Q12->C4 | buck 5V | LDO 3.3V", 18, 24),
         text_box("FIBER CH1", 195, 28),
         text_box("FIBER CH2", 375, 28),
         text_box("DIGITAL IN", 25, 205),
@@ -74,11 +73,19 @@ def emit_connected_schematic(
 
     # Place every component (multi-unit = multiple place with same ref)
     for c in design.comps:
+        shown = c.value
+        show_value = False
+        if c.lib_id == "Device:R" and not c.value.startswith("MOV"):
+            shown = f"R {c.value}"
+            show_value = True
+        elif c.lib_id == "Device:C":
+            shown = f"C {c.value}"
+            show_value = True
         parts.append(
             place_symbol(
                 c.lib_id,
                 c.ref,
-                c.value,
+                shown,
                 c.x,
                 c.y,
                 c.footprint,
@@ -86,6 +93,7 @@ def emit_connected_schematic(
                 unit=c.unit,
                 pin_count=c.pins,
                 in_bom=not c.ref.startswith("#"),
+                show_value=show_value,
             )
         )
 

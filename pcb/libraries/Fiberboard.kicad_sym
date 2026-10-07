@@ -11,11 +11,11 @@
 		(on_board yes)
 		(property "Reference" "U"
 			(at 0 0 0)
-			(effects (font (size 1.27 1.27)))
+			(effects (font (size 1.27 1.27)) (hide yes))
 		)
 		(property "Value" "ESP32_DevKitC_Socket"
 			(at 0 0 0)
-			(effects (font (size 1.27 1.27)))
+			(effects (font (size 1.27 1.27)) (hide yes))
 		)
 		(property "Footprint" "Fiberboard:ESP32_DevKitC_Socket"
 			(at 0 0 0)
@@ -49,10 +49,6 @@
 				(pts (xy -3.81 -44.45) (xy 3.81 -44.45) (xy 3.81 -46.49) (xy -3.81 -46.49) (xy -3.81 -44.45))
 				(stroke (width 0.15) (type default))
 				(fill (type none))
-			)
-			(text "USB"
-				(at 0 -45.49 0)
-				(effects (font (size 1.27 1.27)))
 			)
 		)
 		(symbol "ESP32_DevKitC_Socket_1_1"
@@ -447,11 +443,11 @@
 		(on_board yes)
 		(property "Reference" "J"
 			(at 0 0 0)
-			(effects (font (size 1.27 1.27)))
+			(effects (font (size 1.27 1.27)) (hide yes))
 		)
 		(property "Value" "Fiber_Clamp_1CH"
 			(at 0 0 0)
-			(effects (font (size 1.27 1.27)))
+			(effects (font (size 1.27 1.27)) (hide yes))
 		)
 		(property "Footprint" "Fiberboard:Fiber_Clamp_1CH"
 			(at 0 0 0)
@@ -524,11 +520,11 @@
 		(on_board yes)
 		(property "Reference" "J"
 			(at 0 0 0)
-			(effects (font (size 1.27 1.27)))
+			(effects (font (size 1.27 1.27)) (hide yes))
 		)
 		(property "Value" "Fiber_Clamp_2CH"
 			(at 0 0 0)
-			(effects (font (size 1.27 1.27)))
+			(effects (font (size 1.27 1.27)) (hide yes))
 		)
 		(property "Footprint" "Fiberboard:Fiber_Clamp_2CH"
 			(at 0 0 0)
@@ -558,8 +554,6 @@
 				(stroke (width 0.254) (type default))
 				(fill (type background))
 			)
-			(text "FIBER1" (at -6 4 0) (effects (font (size 1.016 1.016))))
-			(text "FIBER2" (at 6 4 0) (effects (font (size 1.016 1.016))))
 		)
 		(symbol "Fiber_Clamp_2CH_1_1"
 			(pin passive line
@@ -623,11 +617,11 @@
 		(on_board yes)
 		(property "Reference" "J"
 			(at 0 0 0)
-			(effects (font (size 1.27 1.27)))
+			(effects (font (size 1.27 1.27)) (hide yes))
 		)
 		(property "Value" "Screw_Terminal_01x02"
 			(at 0 0 0)
-			(effects (font (size 1.27 1.27)))
+			(effects (font (size 1.27 1.27)) (hide yes))
 		)
 		(property "Footprint" "Fiberboard:Terminal_2EDG5.08-1x02_P5.08mm_Horizontal"
 			(at 0 0 0)
@@ -690,11 +684,11 @@
 		(on_board yes)
 		(property "Reference" "J"
 			(at 0 0 0)
-			(effects (font (size 1.27 1.27)))
+			(effects (font (size 1.27 1.27)) (hide yes))
 		)
 		(property "Value" "Screw_Terminal_01x03"
 			(at 0 0 0)
-			(effects (font (size 1.27 1.27)))
+			(effects (font (size 1.27 1.27)) (hide yes))
 		)
 		(property "Footprint" "Fiberboard:Terminal_2EDG5.08-1x03_P5.08mm_Horizontal"
 			(at 0 0 0)
@@ -767,11 +761,11 @@
 		(on_board yes)
 		(property "Reference" "J"
 			(at 0 0 0)
-			(effects (font (size 1.27 1.27)))
+			(effects (font (size 1.27 1.27)) (hide yes))
 		)
 		(property "Value" "Screw_Terminal_01x04"
 			(at 0 0 0)
-			(effects (font (size 1.27 1.27)))
+			(effects (font (size 1.27 1.27)) (hide yes))
 		)
 		(property "Footprint" "Connector_PinHeader_2.54mm:PinHeader_1x04_P2.54mm_Vertical"
 			(at 0 0 0)
@@ -854,11 +848,11 @@
 		(on_board yes)
 		(property "Reference" "K"
 			(at 0 0 0)
-			(effects (font (size 1.27 1.27)))
+			(effects (font (size 1.27 1.27)) (hide yes))
 		)
 		(property "Value" "G5LE-1"
 			(at 0 0 0)
-			(effects (font (size 1.27 1.27)))
+			(effects (font (size 1.27 1.27)) (hide yes))
 		)
 		(property "Footprint" "Relay_THT:Relay_SPDT_Omron-G5LE-1"
 			(at 0 0 0)
@@ -888,7 +882,6 @@
 				(stroke (width 0.254) (type default))
 				(fill (type background))
 			)
-			(text "G5LE-1" (at 0 8.5 0) (effects (font (size 1.27 1.27))))
 		)
 		(symbol "G5LE-1_1_1"
 			(pin passive line
@@ -952,11 +945,11 @@
 		(on_board yes)
 		(property "Reference" "U"
 			(at 0 0 0)
-			(effects (font (size 1.27 1.27)))
+			(effects (font (size 1.27 1.27)) (hide yes))
 		)
 		(property "Value" "Opto_DIP6"
 			(at 0 0 0)
-			(effects (font (size 1.27 1.27)))
+			(effects (font (size 1.27 1.27)) (hide yes))
 		)
 		(property "Footprint" "Package_DIP:DIP-6_W7.62mm"
 			(at 0 0 0)
@@ -1064,11 +1057,11 @@
 		(on_board yes)
 		(property "Reference" "U"
 			(at 0 0 0)
-			(effects (font (size 1.27 1.27)))
+			(effects (font (size 1.27 1.27)) (hide yes))
 		)
 		(property "Value" "SOIC8"
 			(at 0 0 0)
-			(effects (font (size 1.27 1.27)))
+			(effects (font (size 1.27 1.27)) (hide yes))
 		)
 		(property "Footprint" "Package_SO:SOIC-8_3.9x4.9mm_P1.27mm"
 			(at 0 0 0)
@@ -1196,11 +1189,11 @@
 		(on_board yes)
 		(property "Reference" "Q"
 			(at 0 0 0)
-			(effects (font (size 1.27 1.27)))
+			(effects (font (size 1.27 1.27)) (hide yes))
 		)
 		(property "Value" "SOT23"
 			(at 0 0 0)
-			(effects (font (size 1.27 1.27)))
+			(effects (font (size 1.27 1.27)) (hide yes))
 		)
 		(property "Footprint" "Package_TO_SOT_SMD:SOT-23"
 			(at 0 0 0)
@@ -1273,11 +1266,11 @@
 		(on_board yes)
 		(property "Reference" "NT"
 			(at 0 0 0)
-			(effects (font (size 1.27 1.27)))
+			(effects (font (size 1.27 1.27)) (hide yes))
 		)
 		(property "Value" "NetTie_2"
 			(at 0 0 0)
-			(effects (font (size 1.27 1.27)))
+			(effects (font (size 1.27 1.27)) (hide yes))
 		)
 		(property "Footprint" "NetTie:NetTie-2_SMD_Pad2.0mm"
 			(at 0 0 0)
@@ -1339,11 +1332,11 @@
 		(on_board yes)
 		(property "Reference" "L"
 			(at 0 0 0)
-			(effects (font (size 1.27 1.27)))
+			(effects (font (size 1.27 1.27)) (hide yes))
 		)
 		(property "Value" "CM_Choke_4"
 			(at 0 0 0)
-			(effects (font (size 1.27 1.27)))
+			(effects (font (size 1.27 1.27)) (hide yes))
 		)
 		(property "Footprint" "Inductor_SMD:L_CommonModeChoke_Coilank_ACM2012"
 			(at 0 0 0)
@@ -1373,7 +1366,6 @@
 				(stroke (width 0.254) (type default))
 				(fill (type background))
 			)
-			(text "CM" (at 0 0 0) (effects (font (size 1.27 1.27))))
 		)
 		(symbol "CM_Choke_4_1_1"
 			(pin passive line

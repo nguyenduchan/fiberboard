@@ -6,26 +6,28 @@ OPT_*: chỉ lắp nếu dùng giắc tương ứng; không lắp thì firmware 
 
 from __future__ import annotations
 
-# Giắc neo trên hàng mép -> chỉ linh kiện phục vụ **một** giắc (xem SHARED_LAYOUT_REFS).
-RLY_PWR_REFS = ["FB4", "F2", "D12", "C24", "C25"]
-
-# Nhóm lắp ráp gắn với nhiều giắc (hoặc không gắn một giắc) -> đặt vùng chức năng, không cột giắc.
-GROUP_CONNECTORS: dict[str, tuple[str, ...]] = {
-    "OPT_RLY_PWR": ("J5", "J6"),
-}
-SHARED_LAYOUT_GROUPS = frozenset({"OPT_RLY_PWR", "OPT_LED"})
-SHARED_LAYOUT_REFS: set[str] = set(RLY_PWR_REFS)  # không xếp cột giắc
+# Không có linh kiện nguồn dùng chung giữa hai cọc relay.
+SHARED_LAYOUT_REFS: set[str] = set()
 
 # Linh kiện xếp chồng trong dải interior, căn cột giắc mép bo (không đặt trong vùng MCU).
 OUTPUT_ANCHORS: dict[str, list[str]] = {}
 
 INPUT_ANCHORS: dict[str, list[str]] = {
-    # Thứ tự: dưới (sát giắc) → lên.
-    "J3": ["U5", "R7", "R9", "R20"],
-    "J4": ["U6", "R8", "R10", "R21"],
-    "J8": ["U7", "R15", "R18", "R19", "D9", "D10", "R16", "D6"],
-    "F1T": ["C12"],
-    "F2T": ["C13"],
+    # Thứ tự: sát giắc trước (đèn), rồi mạch của giắc.
+    "J1": ["D13"],
+    "J2": ["D14", "R23"],
+    "J3": ["D15", "R24", "R7", "U5", "R9"],
+    "J4": ["D16", "R25", "R8", "U6", "R10"],
+    # Cuộn, driver, lọc và đèn J5/J6 đặt sát cọc trong pcb_layout (không còn khối công suất).
+    "J5": [],
+    "J6": [],
+    # MOSFET van, flyback và đèn đặt sát J7 trong pcb_layout (nhãn silk MOS).
+    "J7": [],
+    "J8": ["D20", "R29", "R18", "R19", "R15", "D9", "D10"],
+    "F1T": ["D21", "R30", "C12"],
+    "F1R": ["D22", "R31"],
+    "F2T": ["D23", "R32", "C13"],
+    "F2R": ["D24", "R33"],
 }
 
 CONNECTOR_ANCHORS: dict[str, list[str]] = {**OUTPUT_ANCHORS, **INPUT_ANCHORS}
@@ -39,29 +41,41 @@ def _register(refs: list[str], group: str) -> None:
         _REF_TO_GROUP[r] = group
 
 
+_register(["J1", "J2", "D13", "R22", "D14", "R23"], "CORE_PWR")
+# Bảo vệ 24 V: tụ/trở nằm cùng nút chúng lọc (không tách xuống góc bo).
 _register(
     [
-        "J1", "F1", "L2", "RV1", "D7", "C19", "C15", "Q12", "R17",
-        "C4", "C14", "NT1", "D11", "C23", "FB3",
-        "U2", "L1", "D8", "C2", "C22", "U3", "C16", "C17", "C7", "C3",
-        "FB2", "FB1", "R38", "R36", "R37", "C5", "C18", "C21",  # FB4 → OPT_RLY_PWR
+        "F1", "L2", "C19", "C15", "D7", "RV1",
+        "Q12", "R17", "C4", "C14", "D27", "R39", "NT1", "D11", "C23", "FB3",
     ],
-    "CORE_PWR",
+    "PWR_24V_PROTECT",
+)
+# Buck + LDO: tụ vào/ra, Schottky, FB và chia áp sát U2/U3.
+_register(
+    [
+        "C16", "C17", "U2", "D8", "L1", "R38", "R36", "R37",
+        "C2", "C5", "FB2", "C22", "D25", "R34", "C7", "U3", "C3", "C18", "FB1", "C21", "D6", "R16",
+    ],
+    "PWR_BUCK",
 )
 
-_register(["U1", "R20", "R21"], "CORE_MCU")
-_register(["R16", "D6"], "OPT_LED")
+_register(["U1", "R20", "R21", "R40", "R41", "R42", "R43", "R44", "R45"], "CORE_MCU")
 
-_register(RLY_PWR_REFS, "OPT_RLY_PWR")
-_register(["K1", "R11", "Q3", "D3"], "OPT_J5_RLY1")
-_register(["K2", "R12", "Q4", "D4"], "OPT_J6_RLY2")
-_register(["F3", "Q5", "D5", "R13", "R14"], "OPT_J7_SOL")
-_register(["R7", "U5", "R9"], "OPT_J3_FOOT")
-_register(["R8", "U6", "R10"], "OPT_J4_NPN")
-_register(["U7", "R15", "R18", "R19", "D9", "D10"], "OPT_J8_RS485")
+_register(
+    ["J5", "K1", "R11", "Q3", "D3", "D17", "R26", "FB4", "D12", "C24", "C25"],
+    "OPT_J5_RLY1",
+)
+_register(
+    ["J6", "K2", "R12", "Q4", "D4", "D18", "R27", "FB5", "D26", "C26", "C27"],
+    "OPT_J6_RLY2",
+)
+_register(["Q5", "D5", "R13", "R14", "D19", "R28"], "OPT_J7_SOL")
+_register(["R7", "U5", "R9", "D15", "R24"], "OPT_J3_FOOT")
+_register(["R8", "U6", "R10", "D16", "R25"], "OPT_J4_NPN")
+_register(["U7", "R15", "R18", "R19", "D9", "D10", "D20", "R29"], "OPT_J8_RS485")
 
-_register(["F1T", "F1R", "C12"], "OPT_FIBER1")
-_register(["F2T", "F2R", "C13"], "OPT_FIBER2")
+_register(["F1T", "F1R", "C12", "D21", "R30", "D22", "R31"], "OPT_FIBER1")
+_register(["F2T", "F2R", "C13", "D23", "R32", "D24", "R33"], "OPT_FIBER2")
 
 # Giắc cái (chỉ hàng domino / quang — luôn gắn nếu dùng nhóm OPT tương ứng).
 for j in ("J1", "J2", "J3", "J4", "J5", "J6", "J7", "J8", "F1T", "F1R", "F2T", "F2R"):
@@ -85,10 +99,10 @@ for j in ("J1", "J2", "J3", "J4", "J5", "J6", "J7", "J8", "F1T", "F1R", "F2T", "
         _REF_TO_GROUP[j] = "OPT_FIBER2"
 
 ASSEMBLY_TITLES: dict[str, str] = {
-    "CORE_PWR": "Bắt buộc: nguồn J1, cấp keyboard J2",
-    "CORE_MCU": "Bắt buộc: ESP32",
-    "OPT_LED": "Tùy chọn: đèn STATUS (cột J8)",
-    "OPT_RLY_PWR": "Tùy chọn: +5V_RLY — buck; lắp nếu J5 hoặc J6",
+    "CORE_PWR": "Bắt buộc: J1 nguồn vào, J2 cấp bàn phím",
+    "PWR_24V_PROTECT": "Bắt buộc: bảo vệ 24 V",
+    "PWR_BUCK": "Bắt buộc: buck 5 V / LDO 3,3 V",
+    "CORE_MCU": "Bắt buộc: MCU",
     "OPT_J5_RLY1": "Tùy chọn: J5 relay 1",
     "OPT_J6_RLY2": "Tùy chọn: J6 relay 2",
     "OPT_J7_SOL": "Tùy chọn: J7 van",

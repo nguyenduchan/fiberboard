@@ -1,34 +1,34 @@
 Lắp ráp theo vùng giắc cắm (DNP tùy chọn)
 ============================================
 
-Mỗi nhóm OPT_* (một giắc) gồm **giắc cái** + **linh kiện trong khung chữ nhật CONN_*** (sát cọc vít, phía trong bo). Hàng **cạnh dài trên** = ngõ vào, gồm cả phát/thu quang. Hàng **cạnh dài dưới** = ngõ ra, gồm cả RS485. Nhóm phục vụ nhiều giắc nằm trong khối nguồn, không gộp vào một cột giắc.
+Mỗi nhóm OPT_* (một giắc) gồm **giắc cái** + linh kiện của giắc đó trong khung chữ nhật sát cọc. Hàng **cạnh dài trên**: J1, chân, NPN, quang. Hàng **cạnh dài dưới**, trái → phải: relay, van, J2 (24 V ra bàn phím), RS485 — giãn ra, cột đông linh kiện rộng hơn. Không còn nhóm công suất chung: cuộn, driver, lọc +5 V và MOSFET van nằm trong group của cọc tương ứng. Bảo vệ 24 V và buck vẫn là hai group nguồn dùng chung.
 
 Bắt buộc (luôn lắp)
 -------------------
 | Nhóm | Nội dung |
 |------|----------|
-| **CORE_PWR** | J1, J2 (cấp 24 V keyboard), F1, bảo vệ 24 V, buck, LDO 3,3 V |
-| **CORE_MCU** | U1 (đế ESP32) |
+| **CORE_PWR** | J1, J2. Một đèn mỗi giắc: D13 (R22 phía trong), D14 (R23 phía trong) |
+| **PWR_24V_PROTECT** | F1, L2, C19, C15, RV1, D7, Q12, R17, C4, C14, đèn D27/R39 (debug +24 V, silk 24V), NT1, D11, C23, FB3 — tụ và trở sát nút chúng lọc |
+| **PWR_BUCK** | C16, C17, U2, D8, L1, R36–R38, C2, C5, đèn D25/R34 (debug +5 V, silk 5V), FB2, C22, U3, đèn D6/R16 (debug 3,3 V, silk 3V3), C7, C3, C18, FB1, C21 |
+| **CORE_MCU** | U1 (đế ESP32). R20/R21 và R40–R45 (trở nối tiếp GPIO) giữa hai hàng chân đế |
 
 Tùy chọn theo giắc
 ------------------
 | Nhóm | Giắc | Linh kiện phía trên / cùng cột |
 |------|------|--------------------------------|
-| **OPT_J3_FOOT** | J3 | U5, R7, R9 + **R20** (kéo IN_FOOT khi DNP opto) |
-| **OPT_J4_NPN** | J4 | U6, R8, R10 + **R21** (kéo IN_NPN khi DNP opto) |
-| **OPT_J5_RLY1** | J5 | K1, R11, Q3, D3 |
-| **OPT_J6_RLY2** | J6 | K2, R12, Q4, D4 |
-| **OPT_RLY_PWR** | **không** cột giắc — vùng **buck** | FB4, F2, D12, C24, C25 — **lắp nếu dùng J5 hoặc J6** |
-| **OPT_LED** | J8 (sát giắc, cùng cột) | R16, D6 |
-| **OPT_J7_SOL** | J7 | F3, Q5, D5, R13, R14 |
-| **OPT_J8_RS485** | J8 | U7, R15, R18, R19, D9, D10 (R16/D6 đèn: **OPT_LED**, cùng cột) |
-| **OPT_FIBER1** | F1T, F1R | C12 (+ module quang) |
-| **OPT_FIBER2** | F2T, F2R | C13 (+ module quang) |
+| **OPT_J3_FOOT** | J3 | Đèn D15 sát giắc (R24 phía trong); U5, R7, R9. **R20** luôn lắp, giữa hai hàng chân đế |
+| **OPT_J4_NPN** | J4 | Đèn D16 sát giắc (R25 phía trong); U6, R8, R10. **R21** luôn lắp, giữa hai hàng chân đế |
+| **OPT_J5_RLY1** | J5 | Ngay trên cọc: K1, Q3, R11, D3, đèn D17 (R26 phía trong), lọc FB4, D12, C24, C25. Xóa cả group nếu không dùng relay 1 |
+| **OPT_J6_RLY2** | J6 | Ngay trên cọc: K2, Q4, R12, D4, đèn D18 (R27 phía trong), lọc FB5, D26, C26, C27. Xóa cả group nếu không dùng relay 2 |
+| **OPT_J7_SOL** | J7 | MOSFET Q5 ngay giữa cọc (silk **MOS**), D5 bên cạnh, rồi R13, R14, đèn D19 (R28 phía trong) |
+| **OPT_J8_RS485** | J8 | Đèn D20 sát giắc (R29 phía trong); R15, R18, R19, D9, D10. U7 ở dải dưới ESP32 |
+| **OPT_FIBER1** | F1T, F1R | Đèn D21, D22 sát mắt (R30, R31 phía trong); C12 |
+| **OPT_FIBER2** | F2T, F2R | Đèn D23, D24 sát mắt (R32, R33 phía trong); C13 |
 Ghi chú điện
 ------------
 - Không lắp **OPT_J3/J4**: R20/R21 giữ IN_FOOT/IN_NPN ở mức thấp; firmware không đọc hoặc bỏ qua.
 - Không lắp **OPT_J8**: không hàn MAX485; UART RS485 trên ESP32 không nối tải.
-- Chỉ **J6** (không J5): vẫn lắp **OPT_RLY_PWR** trên cột J5; có thể **DNP J5** và K1/Q3/D3/R11.
-- Chỉ **J5** (không J6): DNP nhóm **OPT_J6_RLY2** và giắc J6.
+- Không dùng relay 1: xóa cả group **OPT_J5_RLY1**. Relay 2, buck và MCU không mất nguồn.
+- Không dùng relay 2: xóa cả group **OPT_J6_RLY2**. Relay 1 vẫn chạy trên nhánh FB4 riêng.
 
 Trên PCB: khung silk + nhóm KiCad trùng tên nhóm. Danh sách ref: `pcb/scripts/assembly_groups.py`.

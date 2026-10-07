@@ -2,7 +2,7 @@
 
 Fiberboard là bo mạch điều khiển **logic tích hợp (AIO)**, không có driver stepper Nema. Dùng cho bơm DC, cấp liệu feeder, báo vật thể lạ và mini filler.
 
-Trên bo có **đế cắm ESP32-DevKitC** (nạp phần mềm nhúng qua USB trên module). Nguồn vào **9–24 VDC**. Hai kênh quang **sợi POF 1 mm** (AFBR) gắn trên PCB. Đầu ra relay và van solenoid, **RS485**; đèn trạng thái SMD (**không** có header OLED trên bo).
+Trên bo có **đế cắm ESP32-DevKitC** (nạp phần mềm nhúng qua USB trên module). Nguồn vào **9–24 VDC**. Hai kênh quang **sợi POF 1 mm** (AFBR) gắn trên PCB. Đầu ra relay và van solenoid, **RS485**. Mỗi giắc vào/ra có **đèn SMD 0805** sát cọc. Trong cột nguồn có đèn debug: **D27** sáng khi +24 V sau bảo vệ còn điện, **D25** khi buck ra +5 V, **D6** khi LDO ra 3,3 V. Không có header OLED trên bo.
 
 Kho mã này chỉ chứa thiết kế KiCad và script sinh mạch/layout. **Phần mềm nhúng (firmware)** không có trong kho.
 
@@ -17,21 +17,21 @@ Khối **bảo vệ 24 V + buck** (dùng chung nhiều loại bo): [`pcb/PWR_24V
 | Khối | Mô tả |
 |------|--------|
 | **MCU** | ESP32-DevKitC trên đế cắm; nạp firmware qua USB trên module |
-| **Nguồn** | VIN → **F1/L2/RV1/D7/Q12/C4** → **XL1509** → **+5V** / **+5V_RLY** (FB4, F2) → relay; **AMS1117** → 3,3 V. Mass **NT1+D11+C23+FB3**. Layout cột: **bảo vệ → buck → công suất → MCU**. Chi tiết: [`pcb/PWR_24V_PROTECT_BUCK_GUIDE.txt`](pcb/PWR_24V_PROTECT_BUCK_GUIDE.txt) |
+| **Nguồn** | VIN → **F1/L2/RV1/D7/Q12/C4** → **XL1509** → **+5V**. Mỗi relay lấy +5 V qua ferrite riêng (FB4 / FB5). **AMS1117** → 3,3 V. Chỉ **một** cầu chì F1 tại nguồn tổng 24 V. Mass **NT1+D11+C23+FB3**. Chi tiết: [`pcb/PWR_24V_PROTECT_BUCK_GUIDE.txt`](pcb/PWR_24V_PROTECT_BUCK_GUIDE.txt) |
 | **Quang 2 kênh** | Phát AFBR-1624Z + thu AFBR-2624Z mỗi kênh; sợi POF 1 mm cắm trên bo |
 | **Đầu vào số** | FOOT (công tắc chân), NPN (cảm biến); cách ly quang PC817 |
 | **Đầu ra** | 2 relay G6KU (COM/NO/NC) + 1 van solenoid (MOSFET 24 V); domino J5/J6/J7 (**2EDG5.08**, bước 5,08 mm); flyback D3/D4 (cuộn relay 5 V), D5 SS34 (solenoid trên J7); driver 2N3904 + AO3400A. Tiếp điểm relay kín — tải cảm lớn: snubber/diode tại tải hoặc theo catalog relay |
 | **Giao tiếp** | RS485 bán song công (MAX485); **TVS D9/D10** + **R18/R19** trên A/B; LED trạng thái; I2C chỉ trên ESP32 |
 
-Bảo vệ trên bo (tóm tắt): **F1/F2/F3** = giá cầu chì **5×20 mm** (ống thủy tinh thay bằng tay, không PPTC SMD); **L2, RV1, D7, C4**; mass **NT1, D11, C23, FB3**; relay **F2/D12/C24**; van **F3**. Đầu vào quang PC817; RS485 **D9/D10**. Lắp tủ: nguồn 24 V ≥ 1,5–2 A, dây xoắn, IEC 61000-6-2; dừng khẩn / SIL — phần cứng an toàn riêng.
+Bảo vệ trên bo (tóm tắt): **F1** = một giá cầu chì **5×20 mm** tại nguồn tổng 24 V (ống thủy tinh thay bằng tay, không PPTC SMD); **L2, RV1, D7, C4**; mass **NT1, D11, C23, FB3**; relay **D12/C24**; van lấy **+24V** sau F1. Đầu vào quang PC817; RS485 **D9/D10**. Lắp tủ: nguồn 24 V ≥ 1,5–2 A, dây xoắn, IEC 61000-6-2; dừng khẩn / SIL — phần cứng an toàn riêng.
 
 ---
 
 ## Đầu nối ra ngoài (I/O)
 
-**Cạnh dài trên — ngõ vào** (trái → phải): `J1 | J3 | J4 | F1T | F1R | F2T | F2R`
+**Cạnh dài trên** (trái → phải): `J1 | J3 | J4 | F1T | F1R | F2T | F2R` — nguồn vào 24 V, chân, NPN, quang.
 
-**Cạnh dài dưới — ngõ ra** (trái → phải): `J5 | J6 | J7 | J2 | J8`
+**Cạnh dài dưới** (trái → phải): `J5 | J6 | J7 | J2 | J8` — relay 1, relay 2, van, giắc 24 V ra cho bàn phím, rồi RS485. Các giắc giãn trên suốt cạnh; cột relay, van và RS485 rộng hơn để xếp linh kiện trong khung của cọc. Cột trái trong lòng là bảo vệ 24 V, cột kế là buck.
 
 | Ref | Tên | Chân | Ý nghĩa |
 |-----|-----|------|---------|
@@ -100,6 +100,8 @@ Tên tín hiệu trong firmware giữ nguyên; cột **Hướng** = vào/ra MCU.
 | IO21 | I2C_SDA | Hai chiều | Không ra header bo (tùy chọn ngoài) |
 | IO22 | I2C_SCL | Ra | Không ra header bo (tùy chọn ngoài) |
 
+IO32, IO33, IO4, IO15, IO23 và IO16 có điện trở nối tiếp 1 kΩ (R40–R45) trước mắt quang và MAX485.
+
 ---
 
 ## Thư mục trong kho mã
@@ -138,7 +140,7 @@ Tên tín hiệu trong firmware giữ nguyên; cột **Hướng** = vào/ra MCU.
 |----------|---------|
 | **PCB** | 118 × 84 mm |
 | **Vỏ** | Hộp PLC ABS 145 × 90 × 40 mm |
-| **Giắc** | Cạnh dài trên: vào (J1, J3, J4, quang phát và thu). Cạnh dài dưới: ra (relay, van, RS485) |
+| **Giắc** | Cạnh dài trên: J1 nguồn vào, J3 chân, J4 NPN, quang. Cạnh dài dưới: J5/J6 relay, J7 van sát J2 (24 V ra bàn phím), J8 RS485 |
 | **Lớp / độ dày** | 2 lớp FR4, 1,6 mm |
 | **Lắp ráp** | SMD ưu tiên; domino và AFBR xuyên lỗ theo footprint |
 | **Silk mép dưới** | Cột I/O: nhãn tiếng Việt sát giắc cắm, căn giữa ô; chỉnh trong `pcb/scripts/pcb_layout.py` → `IO_LABELS` |
