@@ -1,11 +1,11 @@
-(footprint "Fuseholder_5x20mm_Horizontal"
+(footprint "Fuseholder_5x20mm_Covered"
 	(version 20241229)
 	(generator "manual")
 	(layer "F.Cu")
-	(descr "Giá đỡ cầu chì ống 5x20 mm, gắn PCB ngang — thay cầu chì bằng tay (Shopee: giá cầu chì 5x20 PCB)")
-	(tags "fuse holder 5x20 through hole")
+	(descr "Đế cầu chì 5x20 có nắp kẹp, gắn PCB ngang. Chân 22.6 mm. Mua: đế cầu chì 5x20 có nắp 22.6 (PTF-15 / BLX-A có nắp). Cao thân có nắp ~20 mm.")
+	(tags "fuse holder 5x20 covered PTF-15")
 	(property "Reference" "F**"
-		(at 0 -6.5 0)
+		(at 0 -6.2 0)
 		(layer "F.SilkS")
 		(effects
 			(font
@@ -14,8 +14,8 @@
 			)
 		)
 	)
-	(property "Value" "Fuseholder_5x20mm_Horizontal"
-		(at 0 6.5 0)
+	(property "Value" "Fuseholder_5x20mm_Covered"
+		(at 0 6.2 0)
 		(layer "F.Fab")
 		(effects
 			(font
@@ -26,8 +26,8 @@
 	)
 	(attr through_hole)
 	(fp_rect
-		(start -11 -4.5)
-		(end 11 4.5)
+		(start -13.5 -4.6)
+		(end 13.5 4.6)
 		(stroke
 			(width 0.12)
 			(type default)
@@ -36,8 +36,8 @@
 		(layer "F.SilkS")
 	)
 	(fp_rect
-		(start -11.5 -5)
-		(end 11.5 5)
+		(start -14.0 -5.1)
+		(end 14.0 5.1)
 		(stroke
 			(width 0.05)
 			(type default)
@@ -46,8 +46,8 @@
 		(layer "F.CrtYd")
 	)
 	(fp_rect
-		(start -11 -4.5)
-		(end 11 4.5)
+		(start -13.5 -4.6)
+		(end 13.5 4.6)
 		(stroke
 			(width 0.1)
 			(type default)
@@ -56,19 +56,19 @@
 		(layer "F.Fab")
 	)
 	(pad "1" thru_hole circle
-		(at -7.62 0)
-		(size 2.4 2.4)
-		(drill 1.2)
+		(at -11.3 0)
+		(size 2.5 2.5)
+		(drill 1.3)
 		(layers "*.Cu" "*.Mask")
 		(remove_unused_layers no)
-		(uuid "a1111111-1111-4111-8111-111111111101")
+		(uuid "b2222222-2222-4222-8222-222222222201")
 	)
 	(pad "2" thru_hole circle
-		(at 7.62 0)
-		(size 2.4 2.4)
-		(drill 1.2)
+		(at 11.3 0)
+		(size 2.5 2.5)
+		(drill 1.3)
 		(layers "*.Cu" "*.Mask")
 		(remove_unused_layers no)
-		(uuid "a1111111-1111-4111-8111-111111111102")
+		(uuid "b2222222-2222-4222-8222-222222222202")
 	)
 )

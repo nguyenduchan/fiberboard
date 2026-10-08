@@ -7,6 +7,7 @@ import uuid
 from collections import defaultdict
 
 from connectivity import (
+    NC_PINS,
     Design,
     build_logic_design,
     find_comp,
@@ -19,27 +20,6 @@ def uid() -> str:
     return str(uuid.uuid4())
 
 
-# Unused ESP32-DevKitC socket pins (left floating / not routed on this logic board)
-_ESP32_NC = {
-    "3",
-    "4",
-    "5",
-    "6",
-    "13",
-    "16",
-    "17",
-    "18",
-    "23",
-    "24",
-    "27",
-    "28",
-    "29",
-    "33",
-    "34",
-    "36",
-    "37",
-    "38",
-}
 
 
 def emit_connected_schematic(
@@ -57,18 +37,16 @@ def emit_connected_schematic(
     labels: list[str] = []
     wires: list[str] = []
     texts = [
-        text_box("FIBERBOARD AIO — FULLY NET-CONNECTED SCHEMATIC (rev A3)", 20, 12),
+        text_box("FIBERBOARD AIO — FULLY NET-CONNECTED SCHEMATIC (rev B)", 20, 6),
         text_box(
             "Global labels on pin tips = electrical connectivity (no cross-board wires)",
             20,
-            18,
+            10,
         ),
-        text_box("POWER / 24V IN PROTECT", 18, 20),
-        text_box("J1->F1->L2->RV1/D7->Q12->C4 | buck 5V | LDO 3.3V", 18, 24),
-        text_box("FIBER CH1", 195, 28),
-        text_box("FIBER CH2", 375, 28),
-        text_box("DIGITAL IN", 25, 205),
-        text_box("RELAYS / MOSFET / RS485", 25, 265),
+        text_box("POWER: J1->F1->D7 TVS->Q12 P-FET (reverse) -> +24V | XL1509-3.3 buck", 18, 20),
+        text_box("MCU ESP32-C3-WROOM-02 + USB-C (USBLC6)", 18, 118),
+        text_box("4 ISOLATED NPN INPUTS (PC817): FOOT / NPN / AMP1 / AMP2", 25, 228),
+        text_box("RELAYS 24V COIL / SOLENOID MOSFET / RS485 3V3", 25, 300),
     ]
 
     # Place every component (multi-unit = multiple place with same ref)
@@ -94,6 +72,7 @@ def emit_connected_schematic(
                 pin_count=c.pins,
                 in_bom=not c.ref.startswith("#"),
                 show_value=show_value,
+                lcsc=c.lcsc,
             )
         )
 
@@ -126,11 +105,7 @@ def emit_connected_schematic(
             )
 
     # Explicit no-connects for unused pins (cleans ERC)
-    nc_pins: list[tuple[str, str]] = []
-    u1 = find_comp(design, "U1", "1")
-    if u1:
-        for p in _ESP32_NC:
-            nc_pins.append(("U1", p))
+    nc_pins: list[tuple[str, str]] = [(ref, p) for ref, pins in NC_PINS.items() for p in pins]
     for ref, pin in nc_pins:
         c = find_comp(design, ref, pin)
         if not c:
@@ -155,10 +130,10 @@ def emit_connected_schematic(
         "\t(title_block\n"
         '\t\t(title "Fiberboard AIO Logic — Connected")\n'
         '\t\t(date "2026-10-06")\n'
-        '\t\t(rev "A3")\n'
+        '\t\t(rev "B1")\n'
         '\t\t(company "Fiberboard")\n'
         '\t\t(comment 1 "All pins net-labeled; wires join local clusters")\n'
-        '\t\t(comment 2 "Fiber PWM TX + RC + LM358 ADC + LM393 DIG; relays; RS485")\n'
+        '\t\t(comment 2 "ESP32-C3, XL1509-3.3, 4x PC817 NPN in, 2x relay 24V coil, MOSFET valve, RS485")\n'
         "\t)\n"
         "\t(lib_symbols\n"
         f"{body}\n"

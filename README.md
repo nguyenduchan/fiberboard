@@ -23,7 +23,7 @@ Khối **bảo vệ 24 V + buck** (dùng chung nhiều loại bo): [`pcb/PWR_24V
 | **Đầu ra** | 2 relay G6KU (COM/NO/NC) + 1 van solenoid (MOSFET 24 V); domino J5/J6/J7 (**2EDG5.08**, bước 5,08 mm); flyback D3/D4 (cuộn relay 5 V), D5 SS34 (solenoid trên J7); driver 2N3904 + AO3400A. Tiếp điểm relay kín — tải cảm lớn: snubber/diode tại tải hoặc theo catalog relay |
 | **Giao tiếp** | RS485 bán song công (MAX485); **TVS D9/D10** + **R18/R19** trên A/B; LED trạng thái; I2C chỉ trên ESP32 |
 
-Bảo vệ trên bo (tóm tắt): **F1** = một giá cầu chì **5×20 mm** tại nguồn tổng 24 V (ống thủy tinh thay bằng tay, không PPTC SMD); **L2, RV1, D7, C4**; mass **NT1, D11, C23, FB3**; relay **D12/C24**; van lấy **+24V** sau F1. Đầu vào quang PC817; RS485 **D9/D10**. Lắp tủ: nguồn 24 V ≥ 1,5–2 A, dây xoắn, IEC 61000-6-2; dừng khẩn / SIL — phần cứng an toàn riêng.
+Bảo vệ trên bo (tóm tắt): **F1** = đế cầu chì **5×20 mm có nắp** (chân 22,6 mm) tại nguồn tổng 24 V, ống sứ 4 A thay bằng tay, không PPTC SMD; **L2, RV1, D7, C4**; mass **NT1, D11, C23, FB3**; relay **D12/C24**; van lấy **+24V** sau F1. Đèn **Vào / Chì / 24V / 5V / 3V3** chỉ chỗ nguồn đứt. Đầu vào quang PC817; RS485 **D9/D10**. Lắp tủ: nguồn 24 V ≥ 1,5–2 A, dây xoắn, IEC 61000-6-2; dừng khẩn / SIL — phần cứng an toàn riêng.
 
 ---
 
@@ -117,7 +117,8 @@ IO32, IO33, IO4, IO15, IO23 và IO16 có điện trở nối tiếp 1 kΩ (R40�
 | `pcb/scripts/generate_kicad_project.py` | Sinh lại sơ đồ/PCB/thư viện |
 | `pcb/scripts/connectivity.py` | Danh sách mạng và kết nối |
 | `pcb/scripts/pcb_layout.py` | Vị trí footprint, silk I/O |
-| `pcb/scripts/check_*.py` | Kiểm ERC, netlist, chân (hỗ trợ) |
+| `pcb/scripts/check_pcb_layout.py` | Kiểm tra chồng linh kiện sau khi sinh PCB |
+| `pcb/scripts/autoroute.py` | Đi dây tự động (A* trên lưới 0,1 mm, 2 lớp; lõi tăng tốc bằng numba trong `maze_nb.py`): mọi chân ra thẳng ≥0,6 mm rồi mới rẽ; đi dây cả GND/GND_PWR; chân kẹt thì dịch nhẹ linh kiện thụ động (bước 0,25 mm, ≤3 mm, không tạo chồng courtyard mới) và rip-up net chắn đường. Chạy sau `generate_kicad_project.py`: `python pcb/scripts/autoroute.py --passes 7 --png route.png` (~5–6 phút) |
 
 ---
 

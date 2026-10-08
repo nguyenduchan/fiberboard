@@ -10,7 +10,7 @@ Danh sách mạng: pcb/scripts/connectivity.py | Bố trí: pcb/scripts/pcb_layo
 | Hạng mục | Cấu hình trên bo / tủ |
 |----------|----------------------|
 | Nguồn vào | 9–24 VDC qua J1; nguồn 24 V ≥ 1,5–2 A, có bảo vệ quá dòng |
-| Xung nhiễu VIN | F1 cầu chì 5×20 (thay tay), L2 lọc CM, RV1 MOV, D7 TVS, C19/C15 tần số cao, Q12 chống ngược, C4 1000 µF giữ áp |
+| Xung nhiễu VIN | F1 đế 5×20 có nắp + ống sứ 4 A (thay tay), L2 lọc CM, RV1 MOV, D7 TVS, C19/C15 tần số cao, Q12 chống ngược, C4 1000 µF giữ áp |
 | Mass | Tách GND_PWR / GND logic; nối sao NT1 + D11 ‖ C23 + FB3 (không nhánh mass song song dọc bo) |
 | Buck / logic | XL1509 + ferrite FB2; AMS1117 + FB1; không đi dây SW/L1 dưới ESP32 |
 | Đầu ra công suất | Mỗi relay một nhánh +5 V (J5: FB4/D12/C24/C25, J6: FB5/D26/C26/C27); van lấy +24V sau F1; flyback D3/D4/D5 |
@@ -25,7 +25,7 @@ Danh sách mạng: pcb/scripts/connectivity.py | Bố trí: pcb/scripts/pcb_layo
 1. Sơ đồ khối điện
 ------------------
   J1 VIN+ / VIN-
-    → F1 giá cầu chì 5×20 mm (ống thủy tinh, thay bằng tay)
+    → F1 đế cầu chì 5×20 mm có nắp (chân 22,6 mm; ống sứ 4 A, thay bằng tay)
     → L2 lọc CM (V+ và mass về domino)
     → RV1 MOV ‖ D7 TVS ‖ C19 (+ C15 tần số cao)
     → Q12 P-FET chống ngược
@@ -86,14 +86,16 @@ Danh sách mạng: pcb/scripts/connectivity.py | Bố trí: pcb/scripts/pcb_layo
 | Solenoid | Q5 AO3400A cắt mass phía âm; J7-1 +24V (sau F1); D5 flyback |
 | RS485 | U7 MAX485; D9/D10 SMAJ5.0A; R18/R19; R15 100 Ω; DE/RE IO17 |
 | Quang 2 kênh | AFBR-1624Z phát / AFBR-2624Z thu; C12/C13 100 nF/kênh; IO32/33 PWM, IO4/15 số |
-| Trạng thái | LED SMD 0805 tại mỗi giắc vào/ra; D27/D25/D6 debug nguồn trong cột bảo vệ và buck; không header OLED trên bo |
+| Trạng thái | LED SMD 0805 tại mỗi giắc vào/ra, nhãn in trên bo; D28 Chì sau cầu chì; D27/D25/D6 debug nguồn (24V/5V/3V3) trong cột bảo vệ và buck; không header OLED trên bo |
 
 
 3. Danh sách linh kiện — bảo vệ 24 V (PWR_24V_PROTECT)
 ------------------------------------------------------
 | Ref | Giá trị              | Footprint / ghi chú           |
 |-----|----------------------|-------------------------------|
-| F1  | Giá 5×20 + F4A/250V  | Footprint Fuseholder_5x20mm_Horizontal; nhanh F4A (hoặc T3,15A nếu muốn chậm) |
+| F1  | Đế 5×20 có nắp + sứ 4 A | Footprint Fuseholder_5x20mm_Covered; chân 22,6 mm; ống sứ nhanh 4 A (thủy tinh F4A lắp được cùng đế) |
+| D28 | LED Chì             | 0805, sáng khi còn điện ngay sau F1 |
+| R46 | 10 kΩ               | Hạn dòng D28 |
 | L2  | CM ACM2012           | 4 chân, lọc CM                |
 | RV1 | MOV ~26 V            | Varistor VF                   |
 | D7  | TVS SMAJ28A          | SMA                           |
@@ -175,8 +177,9 @@ GND:          FB3-2, MCU, opto, RS485, phía logic C2/C22, tụ +3V3
 
 8. Cầu chì thay tay (chỉ F1 tại nguồn tổng 24 V)
 -----------------------------------------------
-- Một giá đỡ cầu chì ống **5×20 mm** gắn PCB, ngay sau J1 (footprint `Fiberboard:Fuseholder_5x20mm_Horizontal`).
-- Cầu chì rời: ống thủy tinh **5×20 mm F4A** (Shopee: `cầu chì 5x20 F4A`).
+- Một đế cầu chì ống **5×20 mm có nắp** gắn PCB, ngay sau J1 (footprint `Fiberboard:Fuseholder_5x20mm_Covered`, chân cách **22,6 mm**). Cao có nắp khoảng 20 mm — vừa hộp 40 mm.
+- Mua đế: Shopee `đế cầu chì 5x20 có nắp 22.6` (kiểu PTF-15 / BLX-A có nắp). Đế kẹp hở không dùng.
+- Ống: sứ **5×20 4 A nhanh** (Shopee `cầu chì sứ 5x20 4A`). Hết sứ thì ống thủy tinh F4A vẫn lắp cùng đế; nắp mới là thứ giữ ống khi rung.
 - Khi đứt: chỉ thay ống; **không** thay PPTC SMD, không hàn lại mạch.
 - Không có cầu chì riêng cho relay hay van. Relay và van nằm sau F1.
 
@@ -191,7 +194,7 @@ GND:          FB3-2, MCU, opto, RS485, phía logic C2/C22, tụ +3V3
 
 10. Giá linh kiện (ước lượng, VND)
 ----------------------------------
-BOM đầy đủ từng Ref (88 chỗ hàn, cầu chì 5×20): **pcb/BOM.txt**
+BOM đầy đủ từng Ref (đế cầu chì 5×20 có nắp): **pcb/BOM.txt**
 
 | Phạm vi | Thấp | Cao |
 |---------|------|-----|

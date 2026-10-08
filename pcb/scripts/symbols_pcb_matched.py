@@ -305,8 +305,8 @@ def pc817_so4(prefix: str = "") -> str:
         _pin("3", "E", "passive", 5.08, -2.54, 180, 2.54),
         _pin("4", "C", "passive", 5.08, 2.54, 180, 2.54),
     ]
-    return f'''{_sym_header(name, "U", "Fiberboard:PC817_SO4",
-                         "PC817 SO-4 SMD optocoupler", "opto PC817")}
+    return f'''{_sym_header(name, "U", "Package_DIP:SMDIP-4_W9.53mm",
+                         "PC817 SMD (DIP-4 gull-wing) optocoupler", "opto PC817")}
 \t\t(symbol "{name.split(":")[-1]}_0_1"
 \t\t\t(rectangle
 \t\t\t\t(start -2.54 -2.54)
@@ -457,41 +457,26 @@ def sot23(prefix: str = "") -> str:
 
 def all_symbols_for_lib() -> str:
     parts = [
-        esp32_devkitc_socket(),
-        fiber_clamp_1ch(),
-        fiber_clamp_2ch(),
+        pc817_so4(),
         terminal_block(2),
         terminal_block(3),
         terminal_block(4),
-        relay_g5le1(),
-        opto_dip6(),
-        soic8(),
-        sot23(),
         net_tie_2(),
-        cm_choke_4(),
     ]
-    return "\n".join(parts)
+    return chr(10).join(parts)
 
 
 def all_symbols_for_schematic_embed() -> str:
     """Symbols embedded in .kicad_sch use Lib:Name."""
     p = "Fiberboard:"
     parts = [
-        esp32_devkitc_socket(p),
         pc817_so4(p),
-        afbr_1624z(p),
-        afbr_2624z(p),
         terminal_block(2, prefix=p),
         terminal_block(3, prefix=p),
         terminal_block(4, prefix=p),
-        relay_g5le1(p),
-        opto_dip6(p),
-        soic8(p),
-        sot23(p),
         net_tie_2(p),
-        cm_choke_4(p),
     ]
-    return "\n".join(parts)
+    return chr(10).join(parts)
 
 
 # PCB placement table (mm) — schematic uses same XY * SCALE + OFFSET

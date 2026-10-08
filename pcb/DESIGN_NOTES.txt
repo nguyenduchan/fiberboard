@@ -10,7 +10,7 @@ Lắp ráp DNP theo giắc: pcb/ASSEMBLY.txt
 
 Nguồn và mass
 -------------
-- VIN J1 9–24 V → F1 (giá cầu chì 5×20, ống F4A thay tay) → L2 → RV1/D7 → Q12 → C4 → U2 buck → FB2/C22 → +5V
+- VIN J1 9–24 V → F1 (đế 5×20 có nắp, chân 22,6 mm, ống sứ 4 A thay tay) → L2 → RV1/D7 → Q12 → C4 → U2 buck → FB2/C22 → +5V
   → U3/FB1 → +3V3
 - Điểm sao mass: NT1 (GND_PWR ↔ GND_SPLICE); D11 + C23; FB3 → GND logic
 - Relay: mỗi cọc một group đủ mạch. J5 = FB4 → D12/C24/C25 → K1 (D3, Q3). J6 = FB5 → D26/C26/C27 → K2 (D4, Q4). Xóa một group không cắt nguồn relay còn lại hay phần còn lại của bo. Không cầu chì riêng trên cuộn
@@ -35,7 +35,7 @@ I/O
 - Relay G6KU J5/J6; solenoid J7; FOOT/NPN J3/J4 (opto); RS485 J8 2EDG5.08
 - Quang 2 kênh AFBR trên bo; sợi POF 1 mm; C12/C13 lọc nguồn cục bộ
 - Flyback: D3/D4 relay 5 V; D5 solenoid 24 V
-- Đèn SMD 0805 sát giắc, không thêm GPIO: D13 có điện ở J1; D14 rail +24 V ở J2; D15/D16 sáng khi chân/NPN tác động; D17/D18 sáng khi cuộn relay bật; D19 sáng khi van bật; D20 sáng khi DE RS485 bật; D21–D24 sáng khi chân quang mức cao. Debug nguồn nằm trong cột nguồn: D27 (+24 V sau C4, mass nguồn) tắt thì lỗi trước buck; D25 (+5V_RAW cạnh C2) tắt thì buck không ra; D6 (+3V3 cạnh U3) tắt thì LDO không ra. Trở 1 kΩ ở 3,3 V/5 V; 10 kΩ ở 24 V.
+- Đèn SMD 0805 sát giắc, không thêm GPIO. Nhãn in trên bo: D13 Vào (có điện J1, trước cầu chì); D28 Chì (ngay sau cầu chì, trước L2/Q12); D14 KB (+24 V ra J2); D15 Chân; D16 NPN; D17 RL1; D18 RL2; D19 Van; D20 485; D21–D24 TX1/RX1/TX2/RX2. Debug nguồn trong cột nguồn, nhãn in: D27 24V (sau Q12/C4) tắt thì lỗi trước buck; D25 5V (+5V_RAW cạnh C2) tắt thì buck không ra; D6 3V3 tắt thì LDO không ra. Đọc lỗi nguồn: Vào tắt = mất điện hoặc cắm ngược; Vào sáng + Chì tắt = cầu chì đứt; Chì sáng + 24V tắt = Q12 không thông; 24V sáng + 5V tắt = buck; 5V sáng + 3V3 tắt = LDO. Trở 1 kΩ ở 3,3 V/5 V; 10 kΩ ở 24 V.
 
 GPIO (ESP32)
 ------------
@@ -52,7 +52,7 @@ PCB / vỏ / gia công
 -------------------
 - Edge.Cuts 118×84 mm (vỏ 145×90×40, lòng thân ~125×90; giắc dọc cạnh 145 mm)
 - 2 lớp FR4 1,6 mm; sâu hộp 40 mm — kiểm tra đế + DevKitC không chạm nắp
-- Nhãn chữ (giắc, nhóm, R/C, 24V/5V/3V3) nằm trên lớp F.Fab: thấy trong KiCad, không in lên bo. Mực in gia công chỉ lấy F.SilkS (viền linh kiện). Điện trở hiện "R" + trị số, tụ hiện "C" + trị số. Nút anode đèn đặt tên *_AN.
+- Nhãn giắc (tên cổng và chân) và nhãn ý nghĩa đèn in trên F.SilkS. Nhãn nhóm, R/C, MOS, DIN nằm trên F.Fab (thấy trong KiCad, không in). Điện trở hiện "R" + trị số, tụ hiện "C" + trị số trên F.Fab. Nút anode đèn đặt tên *_AN.
 
 Quy trình
 ---------

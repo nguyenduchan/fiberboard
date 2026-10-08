@@ -63,8 +63,9 @@ PIN_GEOM: dict[str, dict[str, tuple[float, float]]] = {
         "2": (10.16, 2.54),
         "3": (10.16, -2.54),
         "4": (-10.16, -2.54),
-        "5": (0.0, -7.62),
+        **{p: (0.0, -7.62) for p in ("5", "6", "7", "8")},
     },
+    "Transistor_FET:AO3401A": {"1": (-5.08, 0.0), "2": (2.54, -5.08), "3": (2.54, 5.08)},  # G,S,D
     "Interface_UART:MAX485E": {
         "1": (-10.16, 5.08),
         "2": (-10.16, 2.54),
@@ -139,7 +140,94 @@ PIN_GEOM: dict[str, dict[str, tuple[float, float]]] = {
     "power:+5V": {"1": (0.0, 0.0)},
     "power:+12V": {"1": (0.0, 0.0)},
     "power:+24V": {"1": (0.0, 0.0)},
+    # --- rev B: linh kiện phổ biến (tọa độ chân lấy từ thư viện KiCad 10) ---
+    "RF_Module:ESP32-C3-WROOM-02": {
+        "1": (0.0, 22.86),
+        "2": (-15.24, 17.78),
+        "3": (-15.24, 2.54),
+        "4": (-15.24, 0.0),
+        "5": (-15.24, -2.54),
+        "6": (-15.24, -5.08),
+        "7": (-15.24, -7.62),
+        "8": (-15.24, -10.16),
+        "9": (0.0, -22.86),
+        "10": (-15.24, -12.7),
+        "11": (15.24, 17.78),
+        "12": (15.24, 15.24),
+        "13": (-15.24, -15.24),
+        "14": (-15.24, -17.78),
+        "15": (-15.24, 5.08),
+        "16": (-15.24, 7.62),
+        "17": (-15.24, 10.16),
+        "18": (-15.24, 12.7),
+        "19": (0.0, -22.86),
+    },
+    # 1=COM, 2/5=cuộn, 3=NO, 4=NC (Form A giữ chân 3, Form B giữ chân 4)
+    "Relay:SANYOU_SRD_Form_C": {
+        "1": (5.08, -7.62),
+        "2": (-5.08, -7.62),
+        "3": (7.62, 7.62),
+        "4": (2.54, 7.62),
+        "5": (-5.08, 7.62),
+    },
+    "Connector:USB_C_Receptacle_USB2.0_16P": {
+        **{p: (0.0, -22.86) for p in ("A1", "B1", "A12", "B12")},
+        **{p: (15.24, 15.24) for p in ("A4", "A9", "B4", "B9")},
+        "A5": (15.24, 10.16),
+        "B5": (15.24, 7.62),
+        "A6": (15.24, -2.54),
+        "B6": (15.24, -5.08),
+        "A7": (15.24, 2.54),
+        "B7": (15.24, 0.0),
+        "A8": (15.24, -12.7),
+        "B8": (15.24, -15.24),
+        "SH": (-7.62, -22.86),
+    },
+    "Power_Protection:USBLC6-2SC6": {
+        "1": (-5.08, 0.0),
+        "2": (0.0, -7.62),
+        "3": (-5.08, -2.54),
+        "4": (5.08, -2.54),
+        "5": (0.0, 5.08),
+        "6": (5.08, 0.0),
+    },
+    "Diode:SM712_SOT23": {"1": (-8.89, 0.0), "2": (8.89, 0.0), "3": (0.0, -3.81)},
+    "Transistor_BJT:MMBT3904": {"1": (-5.08, 0.0), "2": (2.54, -5.08), "3": (2.54, 5.08)},  # B,E,C
+    "Device:D_Zener": {"1": (-3.81, 0.0), "2": (3.81, 0.0)},  # 1=K, 2=A
+    "Device:D_Schottky": {"1": (-3.81, 0.0), "2": (3.81, 0.0)},  # 1=K, 2=A
+    "Switch:SW_Push": {"1": (-5.08, 0.0), "2": (5.08, 0.0)},
+    "Regulator_Switching:XL1509-3.3": {
+        "1": (-10.16, 2.54),
+        "2": (10.16, 2.54),
+        "3": (10.16, -2.54),
+        "4": (-10.16, -2.54),
+        **{p: (0.0, -7.62) for p in ("5", "6", "7", "8")},
+    },
+    "Interface_UART:MAX3485": {
+        "1": (-10.16, 5.08),
+        "2": (-10.16, 2.54),
+        "3": (-10.16, 0.0),
+        "4": (-10.16, -5.08),
+        "5": (0.0, -15.24),
+        "6": (10.16, 7.62),
+        "7": (10.16, 2.54),
+        "8": (0.0, 15.24),
+    },
+    # SO-8 P-FET chuẩn SSSGDDDD (AO4407A cùng chân)
+    "Transistor_FET:FDS9435A": {
+        **{p: (2.54, -5.08) for p in ("1", "2", "3")},
+        "4": (-5.08, 0.0),
+        **{p: (2.54, 5.08) for p in ("5", "6", "7", "8")},
+    },
 }
+
+# Chân USB-C 16P theo symbol KiCad (không đánh số 1..N).
+USB_C_PINS = [
+    "A1", "A4", "A5", "A6", "A7", "A8", "A9", "A12",
+    "B1", "B4", "B5", "B6", "B7", "B8", "B9", "B12", "SH",
+]
+# Chân để trống có chủ đích (cờ no-connect trên sơ đồ).
+NC_PINS: dict[str, list[str]] = {"J11": ["A4", "A9", "B4", "B9", "A8", "B8"]}
 
 
 @dataclass
@@ -153,6 +241,7 @@ class Comp:
     rot: int = 0
     unit: int = 1
     pins: int = 2
+    lcsc: str = ""
 
     def __post_init__(self):
         self.x = snap(self.x)
@@ -205,470 +294,263 @@ def pin_abs(c: Comp, pin: str) -> tuple[float, float]:
 
 
 def build_logic_design() -> Design:
-    """Full board connectivity — schematic coordinates (mm), readable layout."""
+    """Full board connectivity — schematic coordinates (mm), readable layout.
+
+    Rev B (linh kiện phổ biến): ESP32-C3-WROOM-02 hàn thẳng + USB-C, một buck XL1509-3.3,
+    relay SRD/HF3FF cuộn 24 V, 4 đầu vào NPN cách ly (FOOT, NPN, AMP1, AMP2), RS485 3,3 V.
+    """
     d = Design()
-
-    # ========== POWER (24V IN PROTECTION + BUCK) ==========
-    # J1 -> F1 (giá 5x20, thay cầu chì tay) -> CM L2 -> MOV RV1 + TVS D7 -> P-FET Q12 -> bulk C4
-    # FB1/FB2 rails; GND star NT1 + D11/C23/FB3; mỗi relay một nhánh +5 V; solenoid on +24V after F1
-    FP_FUSE_5X20 = "Fiberboard:Fuseholder_5x20mm_Horizontal"
-    px, py = 18, 28
-    d.add(Comp("J1", "Fiberboard:Screw_Terminal_01x02", "VIN", FP_EDG_2P, px, py, pins=2))
-    # Tap +24V đã qua F1/L2/Q12, cấp cho J_PWR của mạch keyboard (keyboard tự bảo vệ).
-    d.add(Comp("J2", "Fiberboard:Screw_Terminal_01x02", "KB24", FP_EDG_2P, px + 30, py + 16, pins=2))
-    d.add(Comp("F1", "Device:Fuse", "5x20 F4A", FP_FUSE_5X20, px + 18, py, pins=2))
-    d.add(
-        Comp(
-            "L2",
-            "Fiberboard:CM_Choke_4",
-            "ACM2012",
-            "Inductor_SMD:L_CommonModeChoke_Coilank_ACM2012",
-            px + 32,
-            py,
-            pins=4,
-        )
-    )
-    d.add(
-        Comp(
-            "RV1",
-            "Device:R",
-            "MOV-26V",
-            "Varistor:Varistor_Panasonic_VF",
-            px + 48,
-            py + 14,
-            pins=2,
-        )
-    )
-    d.add(Comp("D7", "Device:D_TVS", "SMAJ28A", "Diode_SMD:D_SMA", px + 48, py + 28, pins=2))
-    d.add(Comp("C19", "Device:C", "10uF", "Capacitor_SMD:C_0805_2012Metric", px + 62, py + 14, pins=2))
-    d.add(Comp("Q12", "Transistor_FET:Q_PMOS_GSD", "AO4407A", "Package_TO_SOT_SMD:SOT-23", px + 48, py, pins=3))
-    d.add(Comp("R17", "Device:R", "100k", "Resistor_SMD:R_0805_2012Metric", px + 48, py + 18, pins=2))
-    d.add(Comp("C15", "Device:C", "100nF", "Capacitor_SMD:C_0805_2012Metric", px + 34, py, pins=2))
-    d.add(Comp("C4", "Device:C", "1000uF", "Capacitor_SMD:CP_Elec_10x12.5", px + 64, py, pins=2))
-    d.add(
-        Comp(
-            "NT1",
-            "Fiberboard:NetTie_2",
-            "GND_STAR",
-            "NetTie:NetTie-2_SMD_Pad2.0mm",
-            px + 64,
-            py + 14,
-            pins=2,
-        )
-    )
-    d.add(Comp("C14", "Device:C", "100nF", "Capacitor_SMD:C_0805_2012Metric", px + 78, py, pins=2))
-    d.add(Comp("R39", "Device:R", "10k", "Resistor_SMD:R_0805_2012Metric", px + 78, py + 14, pins=2))
-    d.add(Comp("D27", "Device:LED", "24V", "LED_SMD:LED_0805_2012Metric", px + 92, py + 14, pins=2))
-    d.connect("+24V", ("R39", "1"))
-    d.connect("P24_AN", ("R39", "2"), ("D27", "2"))
-    d.connect("GND_PWR", ("D27", "1"))
-    d.add(Comp("FB3", "Device:L", "BLM21PG121", "Inductor_SMD:L_0805_2012Metric", px + 70, py + 22, pins=2))
-    d.add(Comp("D11", "Device:D_TVS", "SMAJ5.0A", "Diode_SMD:D_SMA", px + 58, py + 22, pins=2))
-    d.add(Comp("C23", "Device:C", "100nF", "Capacitor_SMD:C_0805_2012Metric", px + 52, py + 22, pins=2))
-    # --- Buck 24V -> 5V (XL1509) ---
-    bx, by = px + 88, py
-    d.add(Comp("U2", "Regulator_Switching:XL1509-5.0", "XL1509-5.0", "Package_TO_SOT_SMD:TO-263-5_TabPin3", bx, by, pins=5))
-    d.add(Comp("C16", "Device:C", "10uF", "Capacitor_SMD:C_0805_2012Metric", bx - 12, by, pins=2))
-    d.add(Comp("C17", "Device:C", "100nF", "Capacitor_SMD:C_0805_2012Metric", bx - 12, by + 12, pins=2))
-    d.add(Comp("D8", "Device:D", "SS34", "Diode_SMD:D_SOD-123", bx + 14, by + 14, pins=2))
-    d.add(Comp("L1", "Device:L", "47uH", "Inductor_SMD:L_1210_3225Metric", bx + 28, by, pins=2))
-    d.add(Comp("C2", "Device:C", "220uF", "Capacitor_SMD:CP_Elec_6.3x5.4", bx + 44, by, pins=2))
-    d.add(Comp("C5", "Device:C", "100nF", "Capacitor_SMD:C_0805_2012Metric", bx + 44, by + 12, pins=2))
-    d.add(Comp("R36", "Device:R", "3k", "Resistor_SMD:R_0805_2012Metric", bx + 20, by + 26, pins=2))
-    d.add(Comp("R37", "Device:R", "1k", "Resistor_SMD:R_0805_2012Metric", bx + 8, by + 26, pins=2))
-    d.add(Comp("R38", "Device:R", "10k", "Resistor_SMD:R_0805_2012Metric", bx, by + 12, pins=2))
-    # --- LDO 5V -> 3.3V (AMS1117) for ESP32 + logic ---
-    d.add(Comp("U3", "Regulator_Linear:AMS1117-3.3", "AMS1117-3.3", "Package_TO_SOT_SMD:SOT-223-3_TabPin2", bx + 62, by, pins=3))
-    d.add(Comp("C7", "Device:C", "10uF", "Capacitor_SMD:C_0805_2012Metric", bx + 56, by, pins=2))
-    d.add(Comp("C3", "Device:C", "22uF", "Capacitor_SMD:C_0805_2012Metric", bx + 78, by, pins=2))
-    d.add(Comp("C18", "Device:C", "100nF", "Capacitor_SMD:C_0805_2012Metric", bx + 78, by + 12, pins=2))
-    d.add(Comp("FB1", "Device:L", "BLM21PG121", "Inductor_SMD:L_0805_2012Metric", bx + 72, by + 24, pins=2))
-    d.add(Comp("C21", "Device:C", "100nF", "Capacitor_SMD:C_0805_2012Metric", bx + 84, by + 24, pins=2))
-    d.add(Comp("FB2", "Device:L", "BLM21PG121", "Inductor_SMD:L_0805_2012Metric", bx + 44, by + 24, pins=2))
-    d.add(Comp("C22", "Device:C", "220uF", "Capacitor_SMD:CP_Elec_6.3x5.4", bx + 56, by + 24, pins=2))
-    d.add(Comp("FB4", "Device:L", "BLM21PG121", "Inductor_SMD:L_0805_2012Metric", bx + 56, by + 38, pins=2))
-    d.add(Comp("D12", "Device:D_TVS", "SMAJ5.0A", "Diode_SMD:D_SMA", bx + 84, by + 38, pins=2))
-    d.add(Comp("C24", "Device:C", "220uF", "Capacitor_SMD:CP_Elec_6.3x5.4", bx + 98, by + 38, pins=2))
-    d.add(Comp("C25", "Device:C", "100nF", "Capacitor_SMD:C_0805_2012Metric", bx + 98, by + 50, pins=2))
-    # Nhánh J6 riêng, để xóa group J5 không cắt nguồn cuộn J6.
-    d.add(Comp("FB5", "Device:L", "BLM21PG121", "Inductor_SMD:L_0805_2012Metric", bx + 56, by + 52, pins=2))
-    d.add(Comp("D26", "Device:D_TVS", "SMAJ5.0A", "Diode_SMD:D_SMA", bx + 84, by + 52, pins=2))
-    d.add(Comp("C26", "Device:C", "220uF", "Capacitor_SMD:CP_Elec_6.3x5.4", bx + 98, by + 52, pins=2))
-    d.add(Comp("C27", "Device:C", "100nF", "Capacitor_SMD:C_0805_2012Metric", bx + 112, by + 52, pins=2))
-    d.add(Comp("#PWR24", "power:+24V", "+24V", "", px + 64, 12, pins=1))
-    d.add(Comp("#PWR5", "power:+5V", "+5V", "", bx + 44, 12, pins=1))
-    d.add(Comp("#PWR33", "power:+3V3", "+3V3", "", bx + 78, 12, pins=1))
-    d.add(Comp("#GND1", "power:GND", "GND", "", px + 70, 48, pins=1))
-    d.add(Comp("#FLG_GNDP", "power:PWR_FLAG", "", "", px + 78, py + 22, pins=1))
-
-    d.connect("VIN_RAW", ("J1", "1"), ("F1", "1"))
-    d.connect("VIN_CM_IN", ("F1", "2"), ("L2", "1"))
-    d.connect("VIN_CM_RET", ("J1", "2"), ("L2", "3"))
-    d.connect(
-        "VIN_FUSE",
-        ("L2", "2"),
-        ("D7", "1"),
-        ("RV1", "1"),
-        ("Q12", "2"),
-        ("C15", "1"),
-        ("C19", "1"),
-    )
-    d.connect("GND_PWR", ("L2", "4"), ("D7", "2"), ("RV1", "2"), ("C19", "2"))
-    # Split ground: switching / 24V return (GND_PWR) vs logic (GND), star at C4 bulk + NT1
-    d.connect("GND_SPLICE", ("NT1", "2"), ("D11", "2"), ("C23", "2"), ("FB3", "1"))
-    d.connect(
-        "GND_PWR",
-        ("C15", "2"),
-        ("C14", "2"),
-        ("C4", "2"),
-        ("NT1", "1"),
-        ("D11", "1"),
-        ("C23", "1"),
-        ("U2", "5"),
-        ("C16", "2"),
-        ("C17", "2"),
-        ("D8", "2"),
-        ("R37", "2"),
-        ("R17", "2"),
-        ("Q3", "1"),
-        ("Q4", "1"),
-        ("Q5", "2"),
-        ("R14", "2"),
-        ("J4", "3"),
-        ("J2", "2"),
-        ("#FLG_GNDP", "1"),
-    )
-    d.connect(
-        "GND",
-        ("#GND1", "1"),
-        ("FB3", "2"),
-        ("C2", "2"),
-        ("C3", "2"),
-        ("C5", "2"),
-        ("C22", "2"),
-        ("C7", "2"),
-        ("C18", "2"),
-        ("U3", "1"),
-    )
-    d.connect("FET_G", ("Q12", "1"), ("R17", "1"))
-    d.connect(
-        "+24V",
-        ("#PWR24", "1"),
-        ("Q12", "3"),
-        ("C4", "1"),
-        ("C14", "1"),
-        ("U2", "1"),
-        ("C16", "1"),
-        ("C17", "1"),
-        ("R38", "1"),
-        ("J2", "1"),
-    )
-    # XL1509 async buck: SW -> L -> +5V ; Schottky K=SW A=GND ; FB divider ~5V
-    d.connect("+5V_SW", ("U2", "2"), ("L1", "1"), ("D8", "1"))
-    d.connect("+5V_RAW", ("L1", "2"), ("C2", "1"), ("C5", "1"), ("FB2", "1"))
-    d.connect(
-        "+5V",
-        ("FB2", "2"),
-        ("C22", "1"),
-        ("C7", "1"),
-        ("#PWR5", "1"),
-        ("U3", "3"),
-        ("R36", "1"),
-        ("FB4", "1"),
-        ("FB5", "1"),
-    )
-    d.connect("+5V_RLY1", ("FB4", "2"), ("D12", "1"), ("C24", "1"), ("C25", "1"))
-    d.connect("GND_PWR", ("D12", "2"), ("C24", "2"), ("C25", "2"))
-    d.connect("+5V_RLY2", ("FB5", "2"), ("D26", "1"), ("C26", "1"), ("C27", "1"))
-    d.connect("GND_PWR", ("D26", "2"), ("C26", "2"), ("C27", "2"))
-    d.connect("+3V3_REG", ("U3", "2"), ("C3", "1"), ("C18", "1"), ("FB1", "1"))
-    d.connect("+3V3", ("FB1", "2"), ("C21", "1"), ("#PWR33", "1"))
-    d.connect("BUCK_FB", ("U2", "3"), ("R36", "2"), ("R37", "1"))
-    d.connect("BUCK_EN", ("U2", "4"), ("R38", "2"))  # EN pull-up R38 to +24V
-    d.connect("GND", ("C21", "2"))
-
-    # ========== ESP32 ==========
-    d.add(Comp("U1", "Fiberboard:ESP32_DevKitC_Socket", "ESP32-DevKitC-32E", "Fiberboard:ESP32_DevKitC_Socket", 70, 130, pins=38))
-    # Kéo xuống khi không lắp opto (OPT_J3/J4 DNP) — song song R9/R10 trong nhóm opto.
-    d.add(Comp("R20", "Device:R", "100k", "Resistor_SMD:R_0805_2012Metric", 62, 118, pins=2))
-    d.add(Comp("R21", "Device:R", "100k", "Resistor_SMD:R_0805_2012Metric", 62, 122, pins=2))
-    # Nối tiếp GPIO trước mắt quang 5 V và MAX485. Đèn vẫn lấy tín hiệu phía MCU,
-    # nên ngắn ở chân module không đi vòng qua trở hạn dòng của đèn.
     fp_r = "Resistor_SMD:R_0805_2012Metric"
-    d.add(Comp("R40", "Device:R", "1k", fp_r, 90, 108, pins=2))
-    d.add(Comp("R41", "Device:R", "1k", fp_r, 104, 108, pins=2))
-    d.add(Comp("R42", "Device:R", "1k", fp_r, 90, 122, pins=2))
-    d.add(Comp("R43", "Device:R", "1k", fp_r, 104, 122, pins=2))
-    d.add(Comp("R44", "Device:R", "1k", fp_r, 118, 108, pins=2))
-    d.add(Comp("R45", "Device:R", "1k", fp_r, 118, 122, pins=2))
-    d.connect("+3V3", ("U1", "1"))
-    d.connect("+5V", ("U1", "19"))
-    # DevKitC-32E J2: 13=IO12 (để trống, chân strap), 14=GND, 15=IO13. J3: 20/26=GND
-    d.connect("GND", ("U1", "14"), ("U1", "20"), ("U1", "26"))
-    d.connect("FIBER1_PWM", ("U1", "7"), ("R40", "1"))  # IO32
-    d.connect("FIBER1_TX", ("R40", "2"))
-    d.connect("FIBER2_PWM", ("U1", "8"), ("R41", "1"))  # IO33
-    d.connect("FIBER2_TX", ("R41", "2"))
-    d.connect("IN_FOOT", ("U1", "9"))     # IO25
-    d.connect("IN_NPN", ("U1", "10"))     # IO26
-    d.connect("OUT_RLY1", ("U1", "11"))   # IO27
-    d.connect("OUT_RLY2", ("U1", "12"))   # IO14
-    d.connect("OUT_MOS", ("U1", "15"))    # IO13
-    d.connect("I2C_SCL", ("U1", "22"))    # IO22
-    d.connect("I2C_SDA", ("U1", "25"))    # IO21
-    d.connect("RS485_TX", ("U1", "21"), ("R44", "1"))  # IO23
-    d.connect("RS485_DI", ("R44", "2"))
-    d.connect("RS485_RX", ("U1", "31"), ("R45", "2"))  # IO16
-    d.connect("RS485_RO", ("R45", "1"))
-    d.connect("RS485_DE", ("U1", "30"))   # IO17
-    d.connect("FIBER1_DIG", ("U1", "32"), ("R42", "2"))  # IO4
-    d.connect("FIBER1_RX", ("R42", "1"))
-    d.connect("FIBER2_DIG", ("U1", "35"), ("R43", "2"))  # IO15
-    d.connect("FIBER2_RX", ("R43", "1"))
-    # EN pull-up
-    d.connect("+3V3", ("U1", "2"))
-    # ========== FIBER (2ch) — Broadcom Versatile Link on PCB, 1 mm POF plug-in ==========
-    # TX AFBR-1624Z: VCC, TTL data in (PWM), GND | RX AFBR-2624Z: VCC, TTL out, mount, GND
-    bx, by = 200, 40
-    d.add(
-        Comp(
-            "F1T",
-            "Fiberboard:AFBR_1624Z",
-            "AFBR-1624Z",
-            "Fiberboard:AFBR_1624Z_VL",
-            bx,
-            by,
-            pins=5,
-        )
-    )
-    d.add(
-        Comp(
-            "F1R",
-            "Fiberboard:AFBR_2624Z",
-            "AFBR-2624Z",
-            "Fiberboard:AFBR_2624Z_VL",
-            bx + 28,
-            by,
-            pins=6,
-        )
-    )
-    d.add(Comp("C12", "Device:C", "100nF", "Capacitor_SMD:C_0805_2012Metric", bx + 14, by + 18, pins=2))
-    d.connect("+5V", ("F1T", "1"), ("F1R", "3"), ("C12", "1"))
-    d.connect("FIBER1_TX", ("F1T", "4"))
-    d.connect("GND", ("F1T", "3"), ("F1T", "5"), ("F1T", "8"), ("F1R", "2"), ("F1R", "4"), ("F1R", "5"), ("F1R", "8"), ("C12", "2"))
-    d.connect("FIBER1_RX", ("F1R", "1"))
-
-    bx2 = 320
-    d.add(
-        Comp(
-            "F2T",
-            "Fiberboard:AFBR_1624Z",
-            "AFBR-1624Z",
-            "Fiberboard:AFBR_1624Z_VL",
-            bx2,
-            by,
-            pins=5,
-        )
-    )
-    d.add(
-        Comp(
-            "F2R",
-            "Fiberboard:AFBR_2624Z",
-            "AFBR-2624Z",
-            "Fiberboard:AFBR_2624Z_VL",
-            bx2 + 28,
-            by,
-            pins=6,
-        )
-    )
-    d.add(Comp("C13", "Device:C", "100nF", "Capacitor_SMD:C_0805_2012Metric", bx2 + 14, by + 18, pins=2))
-    d.connect("+5V", ("F2T", "1"), ("F2R", "3"), ("C13", "1"))
-    d.connect("FIBER2_TX", ("F2T", "4"))
-    d.connect("GND", ("F2T", "3"), ("F2T", "5"), ("F2T", "8"), ("F2R", "2"), ("F2R", "4"), ("F2R", "5"), ("F2R", "8"), ("C13", "2"))
-    d.connect("FIBER2_RX", ("F2R", "1"))
-
-    # ========== DIGITAL IN FOOT / NPN ==========
-    dx, dy = 30, 220
-    d.add(Comp("J3", "Fiberboard:Screw_Terminal_01x02", "FOOT", FP_EDG_2P, dx, dy, pins=2))
-    d.add(Comp("R7", "Device:R", "1k", "Resistor_SMD:R_0805_2012Metric", dx + 30, dy, pins=2))
-    d.add(Comp("U5", "Fiberboard:PC817", "PC817", "Fiberboard:PC817_SO4", dx + 55, dy, pins=4))
-    d.add(Comp("R9", "Device:R", "10k", "Resistor_SMD:R_0805_2012Metric", dx + 85, dy, pins=2))
-    # Foot: J3.1 - R7 - U5 LED (1-2); phototransistor (4) - R9 - +3V3 & IN_FOOT ; pin 3 = GND
-    d.connect("FOOT_A", ("J3", "1"), ("R7", "1"))
-    d.connect("FOOT_AN", ("R7", "2"), ("U5", "1"))
-    d.connect("FOOT_K", ("J3", "2"), ("U5", "2"))
-    d.connect("GND", ("U5", "3"))
-    d.connect("+3V3", ("R9", "1"))
-    d.connect("IN_FOOT", ("R9", "2"), ("U5", "4"), ("R20", "1"))
-    d.connect("GND", ("R20", "2"))
-
-    d.add(Comp("J4", "Fiberboard:Screw_Terminal_01x03", "NPN", FP_EDG_3P, dx + 130, dy, pins=3))
-    d.add(Comp("R8", "Device:R", "1k", "Resistor_SMD:R_0805_2012Metric", dx + 170, dy, pins=2))
-    d.add(Comp("U6", "Fiberboard:PC817", "PC817", "Fiberboard:PC817_SO4", dx + 195, dy, pins=4))
-    d.add(Comp("R10", "Device:R", "10k", "Resistor_SMD:R_0805_2012Metric", dx + 225, dy, pins=2))
-    # J4:1=+24V, J4:2=SIG, J4:3=GND(field) — SIG via R8 to opto LED
-    d.connect("NPN_V+", ("J4", "1"))
-    d.connect("NPN_SIG", ("J4", "2"), ("R8", "1"))
-    d.connect("NPN_AN", ("R8", "2"), ("U6", "1"))
-    d.connect("GND", ("U6", "3"))
-    d.connect("GND_PWR", ("U6", "2"), ("J4", "3"))
-    d.connect("+3V3", ("R10", "1"))
-    d.connect("IN_NPN", ("R10", "2"), ("U6", "4"), ("R21", "1"))
-    d.connect("GND", ("R21", "2"))
-
-    # ========== RELAYS ==========
-    rx, ry = 30, 280
-    d.add(Comp("R11", "Device:R", "1k", "Resistor_SMD:R_0805_2012Metric", rx, ry, pins=2))
-    d.add(Comp("Q3", "Transistor_BJT:2N3904", "2N3904", "Package_TO_SOT_SMD:SOT-23", rx + 25, ry, pins=3))
-    d.add(Comp("D3", "Device:D", "SS34", "Diode_SMD:D_SOD-123", rx + 50, ry - 15, pins=2))
-    d.add(Comp("K1", "Fiberboard:G5LE-1", "G6KU-2F-Y", "Fiberboard:G6KU-2F_SMD", rx + 70, ry, pins=5))
-    d.add(Comp("J5", "Fiberboard:Screw_Terminal_01x03", "RLY1", FP_EDG_3P, rx + 70, ry + 35, pins=3))
-    d.connect("OUT_RLY1", ("R11", "1"))
-    d.connect("RLY1_B", ("R11", "2"), ("Q3", "2"))
-    # Flyback: Device:D pin1=K to +5V, pin2=A to switched coil end
-    d.connect("+5V_RLY1", ("K1", "1"), ("D3", "1"))
-    d.connect("RLY1_COIL", ("K1", "2"), ("Q3", "3"), ("D3", "2"))
-    d.connect("RLY1_COM", ("K1", "4"), ("J5", "1"))
-    d.connect("RLY1_NO", ("K1", "3"), ("J5", "2"))
-    d.connect("RLY1_NC", ("K1", "5"), ("J5", "3"))
-
-    d.add(Comp("R12", "Device:R", "1k", "Resistor_SMD:R_0805_2012Metric", rx + 140, ry, pins=2))
-    d.add(Comp("Q4", "Transistor_BJT:2N3904", "2N3904", "Package_TO_SOT_SMD:SOT-23", rx + 165, ry, pins=3))
-    d.add(Comp("D4", "Device:D", "SS34", "Diode_SMD:D_SOD-123", rx + 190, ry - 15, pins=2))
-    d.add(Comp("K2", "Fiberboard:G5LE-1", "G6KU-2F-Y", "Fiberboard:G6KU-2F_SMD", rx + 210, ry, pins=5))
-    d.add(Comp("J6", "Fiberboard:Screw_Terminal_01x03", "RLY2", FP_EDG_3P, rx + 210, ry + 35, pins=3))
-    d.connect("OUT_RLY2", ("R12", "1"))
-    d.connect("RLY2_B", ("R12", "2"), ("Q4", "2"))
-    d.connect("+5V_RLY2", ("K2", "1"), ("D4", "1"))
-    d.connect("RLY2_COIL", ("K2", "2"), ("Q4", "3"), ("D4", "2"))
-    d.connect("RLY2_COM", ("K2", "4"), ("J6", "1"))
-    d.connect("RLY2_NO", ("K2", "3"), ("J6", "2"))
-    d.connect("RLY2_NC", ("K2", "5"), ("J6", "3"))
-
-    # ========== MOSFET SOLENOID ==========
-    mx, my = 320, 280
-    d.add(Comp("R13", "Device:R", "100", "Resistor_SMD:R_0805_2012Metric", mx + 40, my, pins=2))
-    d.add(Comp("R14", "Device:R", "10k", "Resistor_SMD:R_0805_2012Metric", mx + 40, my + 16, pins=2))
-    d.add(Comp("D5", "Device:D", "SS34", "Diode_SMD:D_SOD-123", mx + 58, my - 16, pins=2))
-    d.add(Comp("Q5", "Transistor_FET:AO3400A", "AO3400A", "Package_TO_SOT_SMD:SOT-23", mx + 58, my, pins=3))
-    d.add(Comp("J7", "Fiberboard:Screw_Terminal_01x02", "SOL", FP_EDG_2P, mx + 80, my, pins=2))
-    d.connect("OUT_MOS", ("R13", "1"))
-    d.connect("MOS_G", ("R13", "2"), ("Q5", "1"), ("R14", "1"))
-    # Solenoid between J7.1 (+24V after F1) and J7.2 (low side switched by Q5); D5 = flyback
-    d.connect("+24V", ("J7", "1"), ("D5", "1"))
-    d.connect("SOL_LO", ("Q5", "3"), ("D5", "2"), ("J7", "2"))
-
-    # ========== RS485 ==========
-    sx, sy = 420, 280
-    d.add(Comp("U7", "Interface_UART:MAX485E", "MAX485E", "Package_SO:SOIC-8_3.9x4.9mm_P1.27mm", sx, sy, pins=8))
-    d.add(Comp("R15", "Device:R", "100", "Resistor_SMD:R_0805_2012Metric", sx + 35, sy, pins=2))
-    d.add(Comp("R18", "Device:R", "10R", "Resistor_SMD:R_0805_2012Metric", sx + 48, sy - 12, pins=2))
-    d.add(Comp("R19", "Device:R", "10R", "Resistor_SMD:R_0805_2012Metric", sx + 58, sy - 12, pins=2))
-    d.add(Comp("D9", "Device:D_TVS", "SMAJ5.0A", "Diode_SMD:D_SMA", sx + 48, sy + 18, pins=2))
-    d.add(Comp("D10", "Device:D_TVS", "SMAJ5.0A", "Diode_SMD:D_SMA", sx + 58, sy + 18, pins=2))
-    # 2EDG5.08-3P socket — cắm đực 2EDG + dây xoắn đôi field (Modbus RTU)
-    d.add(
-        Comp(
-            "J8",
-            "Fiberboard:Screw_Terminal_01x03",
-            "RS485-2EDG3P",
-            FP_EDG_3P,
-            sx + 60,
-            sy,
-            pins=3,
-        )
-    )
-    d.connect("+5V", ("U7", "8"))
-    d.connect("GND", ("U7", "5"), ("J8", "3"))
-    d.connect("RS485_RO", ("U7", "1"))
-    d.connect("RS485_DE", ("U7", "2"), ("U7", "3"))  # RE# and DE tied
-    d.connect("RS485_DI", ("U7", "4"))
-    d.connect("RS485_A", ("U7", "6"), ("R18", "1"))
-    d.connect("RS485_A_BUS", ("R18", "2"), ("R15", "1"), ("J8", "1"), ("D9", "1"))
-    d.connect("RS485_B", ("U7", "7"), ("R19", "1"))
-    d.connect("RS485_B_BUS", ("R19", "2"), ("R15", "2"), ("J8", "2"), ("D10", "1"))
-    d.connect("GND", ("D9", "2"), ("D10", "2"))
-
-    # ========== STATUS LED (no on-board OLED header) ==========
-    # Đèn SMD 0805. 3,3 V / 5 V: 1 kΩ. 24 V: 10 kΩ (~2 mA, 0805 chịu được).
-    # K=chân 1, A=chân 2. Đèn kênh sáng khi tín hiệu đúng mức (vào tích cực / ra bật / DE cao).
-    # Nút giữa trở nối tiếp và anode đặt tên *_AN (không ghi chữ LED trên chân điện trở).
+    fp_c = "Capacitor_SMD:C_0805_2012Metric"
+    fp_c1206 = "Capacitor_SMD:C_1206_3216Metric"
     fp_led = "LED_SMD:LED_0805_2012Metric"
-    fp_r = "Resistor_SMD:R_0805_2012Metric"
+    fp_sod = "Diode_SMD:D_SOD-123"
+    fp_sma = "Diode_SMD:D_SMA"
+    fp_sot = "Package_TO_SOT_SMD:SOT-23"
+    fp_opto = "Package_DIP:SMDIP-4_W9.53mm"
 
-    def add_lamp(led: str, res: str, name: str, rval: str, x: float, y: float) -> None:
+    def lamp(led: str, res: str, name: str, rval: str, x: float, y: float) -> None:
         d.add(Comp(res, "Device:R", rval, fp_r, x, y, pins=2))
         d.add(Comp(led, "Device:LED", name, fp_led, x + 14, y, pins=2))
 
-    add_lamp("D13", "R22", "VIN", "10k", px, py + 16)
-    d.connect("VIN_RAW", ("R22", "1"))
-    d.connect("J1_AN", ("R22", "2"), ("D13", "2"))
-    d.connect("VIN_CM_RET", ("D13", "1"))
+    # ========== NGUỒN VÀO 24 V + BẢO VỆ ==========
+    # J1 -> F1 (5x20 có nắp) -> TVS D7 -> P-FET Q12 chống ngược cực -> +24V (C4 bulk)
+    # Q12 AO3401A: D phía vào, S phía tải (diode thân dẫn đúng chiều). Cổng lấy từ cầu
+    # R63 (G-S 10k) / R17 (G-mass 27k): Vgs = -24*10/37 = -6,5 V; -11,4 V khi TVS kẹp 42 V
+    # (AO3401A chịu ±12 V) -> không cần zener (không có zener trong thư viện Basic JLC).
+    px, py = 20, 30
+    d.add(Comp("J1", "Fiberboard:Screw_Terminal_01x02", "VIN", FP_EDG_2P, px, py, pins=2))
+    d.add(Comp("J2", "Fiberboard:Screw_Terminal_01x02", "KB24", FP_EDG_2P, px, py + 40, pins=2))
+    d.add(Comp("F1", "Device:Fuse", "5x20 su 4A", "Fiberboard:Fuseholder_5x20mm_Covered", px + 18, py, pins=2))
+    d.add(Comp("D7", "Device:D_TVS", "SMAJ26A", fp_sma, px + 34, py + 14, pins=2))
+    d.add(Comp("C15", "Device:C", "100nF 50V", fp_c, px + 44, py + 14, pins=2))
+    d.add(Comp("Q12", "Transistor_FET:AO3401A", "AO3401A", fp_sot, px + 56, py, pins=3))
+    d.add(Comp("R17", "Device:R", "27k", fp_r, px + 52, py + 16, pins=2))
+    d.add(Comp("R63", "Device:R", "10k", fp_r, px + 64, py + 16, pins=2))
+    d.add(Comp("C4", "Device:C", "470uF 35V", "Capacitor_SMD:CP_Elec_10x10.5", px + 76, py + 8, pins=2))
+    d.add(Comp("C14", "Device:C", "100nF 50V", fp_c, px + 86, py + 8, pins=2))
+    lamp("D27", "R39", "24V", "10k", px + 76, py + 26)
+    d.add(Comp("#PWR24", "power:+24V", "+24V", "", px + 76, 14, pins=1))
+    d.add(Comp("#FLG_GNDP", "power:PWR_FLAG", "", "", px + 34, py + 30, pins=1))
 
-    add_lamp("D14", "R23", "KB24", "10k", px + 30, py + 32)
-    d.connect("+24V", ("R23", "1"))
-    d.connect("J2_AN", ("R23", "2"), ("D14", "2"))
-    d.connect("GND_PWR", ("D14", "1"))
+    d.connect("VIN_RAW", ("J1", "1"), ("F1", "1"))
+    d.connect("VIN_FUSE", ("F1", "2"), ("D7", "1"), ("C15", "1"), ("Q12", "3"))
+    d.connect("FET_G", ("Q12", "1"), ("R17", "1"), ("R63", "2"))
+    d.connect(
+        "+24V",
+        ("#PWR24", "1"),
+        ("Q12", "2"),
+        ("R63", "1"),
+        ("C4", "1"),
+        ("C14", "1"),
+        ("R39", "1"),
+        ("J2", "1"),
+    )
+    d.connect("P24_AN", ("R39", "2"), ("D27", "2"))
+    d.connect(
+        "GND_PWR",
+        ("J1", "2"),
+        ("J2", "2"),
+        ("D7", "2"),
+        ("C15", "2"),
+        ("R17", "2"),
+        ("C4", "2"),
+        ("C14", "2"),
+        ("D27", "1"),
+        ("#FLG_GNDP", "1"),
+    )
 
-    add_lamp("D15", "R24", "FOOT", "1k", dx + 40, dy + 16)
-    d.connect("+3V3", ("R24", "1"))
-    d.connect("J3_AN", ("R24", "2"), ("D15", "2"))
-    d.connect("IN_FOOT", ("D15", "1"))
+    # ========== BUCK 24 V -> 5 V (XL1509-5.0) + LDO 3,3 V (AMS1117) ==========
+    # Cả hai là mã Basic của JLC. ~EN nối mass = luôn chạy; FB nối thẳng ra 5 V (bản cố định).
+    # LDO chỉ tụt 1,7 V x ~0,1 A trung bình (đỉnh WiFi ~0,35 A) -> SOT-223 đủ.
+    bx, by = 140, 30
+    d.add(Comp("U2", "Regulator_Switching:XL1509-5.0", "XL1509-5.0", "Package_SO:SOIC-8_3.9x4.9mm_P1.27mm", bx, by, pins=8))
+    d.add(Comp("C16", "Device:C", "10uF 50V", fp_c1206, bx - 22, by, pins=2))
+    d.add(Comp("C17", "Device:C", "100nF 50V", fp_c, bx - 14, by + 14, pins=2))
+    d.add(Comp("D8", "Device:D_Schottky", "SS34", fp_sma, bx + 18, by + 16, pins=2))
+    d.add(Comp("L1", "Device:L", "47uH 6045", "Inductor_SMD:L_Sunlord_SWPA6045S", bx + 30, by, pins=2))
+    d.add(Comp("C2", "Device:C", "220uF 10V", "Capacitor_SMD:CP_Elec_6.3x5.4", bx + 44, by + 8, pins=2))
+    d.add(Comp("C5", "Device:C", "100nF", fp_c, bx + 54, by + 8, pins=2))
+    d.add(Comp("U3", "Regulator_Linear:AMS1117-3.3", "AMS1117-3.3", "Package_TO_SOT_SMD:SOT-223-3_TabPin2", bx + 70, by, pins=3))
+    d.add(Comp("C7", "Device:C", "10uF", fp_c, bx + 62, by + 12, pins=2))
+    d.add(Comp("C3", "Device:C", "22uF", fp_c, bx + 80, by + 12, pins=2))
+    d.add(Comp("C18", "Device:C", "100nF", fp_c, bx + 90, by + 12, pins=2))
+    lamp("D6", "R16", "3V3", "1k", bx + 44, by + 26)
+    # Sao mass: GND_PWR (nguồn, relay, van, phía hiện trường) gặp GND (logic) tại NT1.
+    d.add(Comp("NT1", "Fiberboard:NetTie_2", "GND_STAR", "NetTie:NetTie-2_SMD_Pad2.0mm", bx + 10, by + 30, pins=2))
+    d.add(Comp("#PWR5", "power:+5V", "+5V", "", bx + 44, 14, pins=1))
+    d.add(Comp("#PWR33", "power:+3V3", "+3V3", "", bx + 80, 14, pins=1))
+    d.add(Comp("#GND1", "power:GND", "GND", "", bx + 24, by + 40, pins=1))
 
-    add_lamp("D16", "R25", "NPN", "1k", dx + 170, dy + 16)
-    d.connect("+3V3", ("R25", "1"))
-    d.connect("J4_AN", ("R25", "2"), ("D16", "2"))
-    d.connect("IN_NPN", ("D16", "1"))
-
-    add_lamp("D17", "R26", "RLY1", "1k", rx + 70, ry + 18)
-    d.connect("+5V_RLY1", ("R26", "1"))
-    d.connect("J5_AN", ("R26", "2"), ("D17", "2"))
-    d.connect("RLY1_COIL", ("D17", "1"))
-
-    add_lamp("D18", "R27", "RLY2", "1k", rx + 210, ry + 18)
-    d.connect("+5V_RLY2", ("R27", "1"))
-    d.connect("J6_AN", ("R27", "2"), ("D18", "2"))
-    d.connect("RLY2_COIL", ("D18", "1"))
-
-    add_lamp("D19", "R28", "VAN", "10k", mx + 58, my + 16)
-    d.connect("+24V", ("R28", "1"))
-    d.connect("J7_AN", ("R28", "2"), ("D19", "2"))
-    d.connect("SOL_LO", ("D19", "1"))
-
-    add_lamp("D20", "R29", "485", "1k", sx + 20, sy + 18)
-    d.connect("RS485_DE", ("R29", "1"))
-    d.connect("J8_AN", ("R29", "2"), ("D20", "2"))
-    d.connect("GND", ("D20", "1"))
-
-    add_lamp("D21", "R30", "TX1", "1k", bx, by + 22)
-    d.connect("FIBER1_PWM", ("R30", "1"))  # đèn phía GPIO, trước R40
-    d.connect("F1T_AN", ("R30", "2"), ("D21", "2"))
-    d.connect("GND", ("D21", "1"))
-
-    add_lamp("D22", "R31", "RX1", "1k", bx + 28, by + 22)
-    d.connect("FIBER1_RX", ("R31", "1"))  # đèn phía mắt thu, GPIO nằm sau R42
-    d.connect("F1R_AN", ("R31", "2"), ("D22", "2"))
-    d.connect("GND", ("D22", "1"))
-
-    add_lamp("D23", "R32", "TX2", "1k", bx2, by + 22)
-    d.connect("FIBER2_PWM", ("R32", "1"))
-    d.connect("F2T_AN", ("R32", "2"), ("D23", "2"))
-    d.connect("GND", ("D23", "1"))
-
-    add_lamp("D24", "R33", "RX2", "1k", bx2 + 28, by + 22)
-    d.connect("FIBER2_RX", ("R33", "1"))
-    d.connect("F2R_AN", ("R33", "2"), ("D24", "2"))
-    d.connect("GND", ("D24", "1"))
-
-    add_lamp("D25", "R34", "5V", "1k", bx + 44, by + 28)
-    d.connect("+5V_RAW", ("R34", "1"))
-    d.connect("P5V_AN", ("R34", "2"), ("D25", "2"))
-    d.connect("GND", ("D25", "1"))
-
-    add_lamp("D6", "R16", "3V3", "1k", bx + 62, by + 28)
-    d.connect("+3V3", ("R16", "1"))
+    d.connect("+24V", ("U2", "1"), ("C16", "1"), ("C17", "1"))
+    d.connect("BUCK_SW", ("U2", "2"), ("L1", "1"), ("D8", "1"))
+    d.connect("+5V", ("L1", "2"), ("U2", "3"), ("C2", "1"), ("C5", "1"), ("U3", "3"), ("C7", "1"), ("#PWR5", "1"))
+    d.connect("+3V3", ("U3", "2"), ("C3", "1"), ("C18", "1"), ("R16", "1"), ("#PWR33", "1"))
     d.connect("P3V3_AN", ("R16", "2"), ("D6", "2"))
-    d.connect("GND", ("D6", "1"))
+    d.connect(
+        "GND_PWR",
+        ("U2", "4"),
+        *[("U2", p) for p in "5678"],
+        ("C16", "2"),
+        ("C17", "2"),
+        ("D8", "2"),
+        ("C2", "2"),
+        ("C5", "2"),
+        ("NT1", "1"),
+    )
+    d.connect("GND", ("NT1", "2"), ("#GND1", "1"), ("D6", "1"), ("U3", "1"), ("C7", "2"), ("C3", "2"), ("C18", "2"))
+
+    # ========== MCU: ESP32-C3-WROOM-02 (chân răng cưa, hàn tay được) ==========
+    # GPIO tránh chân strapping (2, 8, 9) cho vào/ra. IO8 = đèn RUN (kéo lên), IO9 = nút BOOT.
+    # IO18/IO19 = USB D-/D+ (USB-Serial-JTAG: nạp và log, không cần chip USB-UART).
+    mx, my = 110, 150
+    d.add(Comp("U1", "RF_Module:ESP32-C3-WROOM-02", "ESP32-C3-WROOM-02", "RF_Module:ESP32-C3-WROOM-02", mx, my, pins=19))
+    d.add(Comp("C8", "Device:C", "10uF", fp_c, mx - 10, my - 40, pins=2))
+    d.add(Comp("C9", "Device:C", "100nF", fp_c, mx, my - 40, pins=2))
+    d.add(Comp("R52", "Device:R", "10k", fp_r, mx - 40, my - 30, pins=2))
+    d.add(Comp("C10", "Device:C", "1uF", fp_c, mx - 50, my - 22, pins=2))
+    d.add(Comp("R53", "Device:R", "10k", fp_r, mx - 50, my - 6, pins=2))
+    d.add(Comp("R54", "Device:R", "10k", fp_r, mx - 60, my + 2, pins=2))
+    d.add(Comp("R55", "Device:R", "10k", fp_r, mx - 70, my + 10, pins=2))
+    d.add(Comp("SW1", "Switch:SW_Push", "BOOT", "Button_Switch_SMD:SW_Push_1P1T_XKB_TS-1187A", mx - 60, my + 20, pins=2))
+    lamp("D30", "R56", "RUN", "1k", mx - 90, my + 30)
+
+    d.connect("+3V3", ("U1", "1"), ("C8", "1"), ("C9", "1"), ("R52", "1"), ("R53", "1"), ("R54", "1"), ("R55", "1"), ("R56", "1"))
+    d.connect("GND", ("U1", "9"), ("U1", "19"), ("C8", "2"), ("C9", "2"), ("C10", "2"), ("SW1", "2"))
+    d.connect("ESP_EN", ("U1", "2"), ("R52", "2"), ("C10", "1"))
+    d.connect("IN_FOOT", ("U1", "3"))     # IO4
+    d.connect("IN_NPN", ("U1", "4"))      # IO5
+    d.connect("IN_AMP1", ("U1", "5"))     # IO6
+    d.connect("IN_AMP2", ("U1", "6"))     # IO7
+    d.connect("LED_RUN", ("U1", "7"), ("R54", "2"), ("D30", "1"))  # IO8, đèn sáng khi kéo thấp
+    d.connect("RUN_AN", ("R56", "2"), ("D30", "2"))
+    d.connect("ESP_BOOT", ("U1", "8"), ("R55", "2"), ("SW1", "1"))  # IO9
+    d.connect("OUT_MOS", ("U1", "10"))    # IO10
+    d.connect("RS485_RX", ("U1", "11"))   # IO20 / U0RXD
+    d.connect("RS485_TX", ("U1", "12"))   # IO21 / U0TXD
+    d.connect("USB_DN", ("U1", "13"))     # IO18
+    d.connect("USB_DP", ("U1", "14"))     # IO19
+    d.connect("RS485_DE", ("U1", "15"))   # IO3
+    d.connect("ESP_IO2", ("U1", "16"), ("R53", "2"))  # IO2 strapping: kéo lên
+    d.connect("OUT_RLY2", ("U1", "17"))   # IO1
+    d.connect("OUT_RLY1", ("U1", "18"))   # IO0
+
+    # ========== USB-C (nạp firmware / log) ==========
+    # Chỉ dùng đường dữ liệu: bo luôn cấp 24 V khi nạp. CC1/CC2 5,1 kΩ để host nhận thiết bị.
+    ux, uy = 30, 150
+    d.add(Comp("J11", "Connector:USB_C_Receptacle_USB2.0_16P", "USB-C", "Connector_USB:USB_C_Receptacle_HRO_TYPE-C-31-M-12", ux, uy, pins=17))
+    d.add(Comp("R50", "Device:R", "5.1k", fp_r, ux + 30, uy + 26, pins=2))
+    d.add(Comp("R51", "Device:R", "5.1k", fp_r, ux + 40, uy + 26, pins=2))
+    # VBUS để trống (bo tự cấp nguồn 24 V). Không có chip ESD (không có mã Basic): cổng chỉ dùng
+    # để nạp/bảo trì bên trong hộp, không đưa ra mặt tủ.
+    d.connect("USB_CC1", ("J11", "A5"), ("R50", "1"))
+    d.connect("USB_CC2", ("J11", "B5"), ("R51", "1"))
+    d.connect("USB_DP", ("J11", "A6"), ("J11", "B6"))
+    d.connect("USB_DN", ("J11", "A7"), ("J11", "B7"))
+    d.connect("GND", *[("J11", p) for p in ("A1", "B1", "A12", "B12", "SH")], ("R50", "2"), ("R51", "2"))
+
+    # ========== 4 ĐẦU VÀO CÁCH LY (PC817), CÙNG MỘT MẠCH ==========
+    # Kiểu NPN (sink): cảm biến/công tắc kéo SIG về 0 V -> dòng +24V -> R -> LED opto -> SIG.
+    # J3 (2P) cho công tắc khô: 1 = SIG, 2 = 0 V. J4/J9/J10 (3P): 1 = +24 V cấp cảm biến, 2 = SIG, 3 = 0 V.
+    # Phía MCU: kéo lên 10 kΩ, opto kéo thấp khi có tín hiệu; đèn sáng theo mức thấp.
+    dx, dy = 30, 250
+    inputs = [
+        # jack, pins, sig net, R_led, opto, R_pull, LED, R_lamp, IN net, label
+        ("J3", 2, "FOOT_SIG", "R7", "U5", "R9", "D15", "R24", "IN_FOOT", "FOOT"),
+        ("J4", 3, "NPN_SIG", "R8", "U6", "R10", "D16", "R25", "IN_NPN", "NPN"),
+        ("J9", 3, "AMP1_SIG", "R57", "U9", "R58", "D31", "R59", "IN_AMP1", "AMP1"),
+        ("J10", 3, "AMP2_SIG", "R60", "U10", "R61", "D32", "R62", "IN_AMP2", "AMP2"),
+    ]
+    for i, (jr, npin, sig, r_led, opto, r_pull, led, r_lamp, net_in, label) in enumerate(inputs):
+        x = dx + i * 75
+        sym = "Fiberboard:Screw_Terminal_01x02" if npin == 2 else "Fiberboard:Screw_Terminal_01x03"
+        fp = FP_EDG_2P if npin == 2 else FP_EDG_3P
+        d.add(Comp(jr, sym, label, fp, x, dy, pins=npin))
+        d.add(Comp(r_led, "Device:R", "10k", fp_r, x + 22, dy - 12, pins=2))
+        d.add(Comp(opto, "Fiberboard:PC817", "LTV-817S", fp_opto, x + 38, dy, pins=4))
+        d.add(Comp(r_pull, "Device:R", "10k", fp_r, x + 56, dy - 12, pins=2))
+        lamp(led, r_lamp, label, "1k", x + 40, dy + 18)
+        an = f"{label}_AN"
+        d.connect("+24V", (r_led, "1"))
+        d.connect(an, (r_led, "2"), (opto, "1"))
+        if npin == 2:
+            d.connect(sig, (jr, "1"), (opto, "2"))
+            d.connect("GND_PWR", (jr, "2"))
+        else:
+            d.connect("+24V", (jr, "1"))
+            d.connect(sig, (jr, "2"), (opto, "2"))
+            d.connect("GND_PWR", (jr, "3"))
+        d.connect("GND", (opto, "3"))
+        d.connect("+3V3", (r_pull, "1"), (r_lamp, "1"))
+        d.connect(net_in, (opto, "4"), (r_pull, "2"), (led, "1"))
+        d.connect(f"{jr}_AN", (r_lamp, "2"), (led, "2"))
+
+    # ========== RELAY (SRD / HF3FF cuộn 24 V) ==========
+    # Cuộn lấy thẳng +24V (không tải buck). MMBT3904 kéo thấp; R47/R48 giữ tắt lúc khởi động.
+    rx, ry = 30, 330
+    for i, (k, j, q, rb, rpd, dfly, led, rlamp, tag) in enumerate(
+        (
+            ("K1", "J5", "Q3", "R11", "R47", "D3", "D17", "R26", "RLY1"),
+            ("K2", "J6", "Q4", "R12", "R48", "D4", "D18", "R27", "RLY2"),
+        )
+    ):
+        x = rx + i * 120
+        d.add(Comp(rb, "Device:R", "1k", fp_r, x, ry, pins=2))
+        d.add(Comp(rpd, "Device:R", "10k", fp_r, x + 10, ry + 14, pins=2))
+        d.add(Comp(q, "Transistor_BJT:MMBT3904", "MMBT3904", fp_sot, x + 22, ry, pins=3))
+        d.add(Comp(dfly, "Device:D", "1N4148W", fp_sod, x + 40, ry - 16, pins=2))
+        d.add(Comp(k, "Relay:SANYOU_SRD_Form_C", "HF3FF-024-1ZS", "Relay_THT:Relay_SPDT_SANYOU_SRD_Series_Form_C", x + 60, ry, pins=5))
+        d.add(Comp(j, "Fiberboard:Screw_Terminal_01x03", tag, FP_EDG_3P, x + 60, ry + 30, pins=3))
+        lamp(led, rlamp, tag, "10k", x + 30, ry + 22)
+        d.connect(f"OUT_{tag}", (rb, "1"))
+        d.connect(f"{tag}_B", (rb, "2"), (rpd, "1"), (q, "1"))
+        d.connect("GND_PWR", (rpd, "2"), (q, "2"))
+        d.connect("+24V", (k, "5"), (dfly, "1"), (rlamp, "1"))
+        d.connect(f"{tag}_COIL", (k, "2"), (q, "3"), (dfly, "2"), (led, "1"))
+        d.connect(f"{j}_AN", (rlamp, "2"), (led, "2"))
+        d.connect(f"{tag}_COM", (k, "1"), (j, "1"))
+        d.connect(f"{tag}_NO", (k, "3"), (j, "2"))
+        d.connect(f"{tag}_NC", (k, "4"), (j, "3"))
+
+    # ========== VAN SOLENOID 24 V (MOSFET phía thấp) ==========
+    vx, vy = 300, 330
+    d.add(Comp("R13", "Device:R", "10R", fp_r, vx, vy, pins=2))
+    d.add(Comp("R14", "Device:R", "10k", fp_r, vx, vy + 16, pins=2))
+    d.add(Comp("D5", "Device:D_Schottky", "SS34", fp_sma, vx + 18, vy - 16, pins=2))
+    d.add(Comp("Q5", "Transistor_FET:AO3400A", "AO3400A", fp_sot, vx + 18, vy, pins=3))
+    d.add(Comp("J7", "Fiberboard:Screw_Terminal_01x02", "SOL", FP_EDG_2P, vx + 40, vy, pins=2))
+    lamp("D19", "R28", "VAN", "10k", vx + 18, vy + 20)
+    d.connect("OUT_MOS", ("R13", "1"))
+    d.connect("MOS_G", ("R13", "2"), ("Q5", "1"), ("R14", "1"))
+    d.connect("GND_PWR", ("R14", "2"), ("Q5", "2"))
+    d.connect("+24V", ("J7", "1"), ("D5", "1"), ("R28", "1"))
+    d.connect("SOL_LO", ("Q5", "3"), ("D5", "2"), ("J7", "2"), ("D19", "1"))
+    d.connect("J7_AN", ("R28", "2"), ("D19", "2"))
+
+    # ========== RS485 3,3 V (SIT3485 / MAX3485) ==========
+    sx, sy = 400, 330
+    d.add(Comp("U7", "Interface_UART:MAX3485", "SP3485EN", "Package_SO:SOIC-8_3.9x4.9mm_P1.27mm", sx, sy, pins=8))
+    d.add(Comp("C11", "Device:C", "100nF", fp_c, sx, sy - 26, pins=2))
+    d.add(Comp("R49", "Device:R", "10k", fp_r, sx - 24, sy + 14, pins=2))
+    d.add(Comp("R18", "Device:R", "10R", fp_r, sx + 22, sy - 12, pins=2))
+    d.add(Comp("R19", "Device:R", "10R", fp_r, sx + 32, sy - 12, pins=2))
+    d.add(Comp("R15", "Device:R", "120R", fp_r, sx + 44, sy, pins=2))
+    d.add(Comp("D9", "Diode:SM712_SOT23", "PSM712", fp_sot, sx + 44, sy + 18, pins=3))
+    d.add(Comp("J8", "Fiberboard:Screw_Terminal_01x03", "RS485", FP_EDG_3P, sx + 64, sy, pins=3))
+    lamp("D20", "R29", "485", "1k", sx + 10, sy + 30)
+    d.connect("+3V3", ("U7", "8"), ("C11", "1"))
+    d.connect("GND", ("U7", "5"), ("C11", "2"), ("R49", "2"), ("D9", "3"), ("J8", "3"), ("D20", "1"))
+    d.connect("RS485_RX", ("U7", "1"))
+    d.connect("RS485_DE", ("U7", "2"), ("U7", "3"), ("R49", "1"), ("R29", "1"))  # RE#+DE chung, kéo xuống = nghe
+    d.connect("RS485_TX", ("U7", "4"))
+    d.connect("RS485_A", ("U7", "6"), ("R18", "1"))
+    d.connect("RS485_B", ("U7", "7"), ("R19", "1"))
+    d.connect("RS485_A_BUS", ("R18", "2"), ("R15", "1"), ("D9", "1"), ("J8", "1"))
+    d.connect("RS485_B_BUS", ("R19", "2"), ("R15", "2"), ("D9", "2"), ("J8", "2"))
+    d.connect("J8_AN", ("R29", "2"), ("D20", "2"))
+
+    for c in d.comps:
+        c.lcsc = lcsc_code(c)
 
     from assembly_groups import omitted_refs
 
@@ -682,6 +564,61 @@ def build_logic_design() -> Design:
             else:
                 del d.nets[net]
     return d
+
+
+# JLCPCB / LCSC: ưu tiên mã Basic (không phí nạp linh kiện). "EXT" = Extended (không có Basic thay).
+# Linh kiện chân cắm (domino, relay, đế cầu chì) tự hàn tay: không đưa vào SMT.
+LCSC_BY_VALUE: dict[tuple[str, str], tuple[str, str]] = {
+    ("Device:R", "10k"): ("C17414", "BASIC"),
+    ("Device:R", "1k"): ("C17513", "BASIC"),
+    ("Device:R", "5.1k"): ("C27834", "BASIC"),
+    ("Device:R", "27k"): ("C17593", "BASIC"),
+    ("Device:R", "120R"): ("C17437", "BASIC"),
+    ("Device:R", "10R"): ("C17415", "BASIC"),
+    ("Device:C", "100nF"): ("C49678", "BASIC"),
+    ("Device:C", "100nF 50V"): ("C49678", "BASIC"),
+    ("Device:C", "10uF"): ("C15850", "BASIC"),
+    ("Device:C", "1uF"): ("C28323", "BASIC"),
+    ("Device:C", "22uF"): ("C45783", "BASIC"),
+    ("Device:C", "10uF 50V"): ("C13585", "BASIC"),
+    ("Device:C", "470uF 35V"): ("C2836436", "EXT"),
+    ("Device:C", "220uF 10V"): ("C2833309", "EXT"),
+    ("Device:L", "47uH 6045"): ("C36414", "EXT"),
+}
+LCSC_BY_PART: dict[str, tuple[str, str]] = {
+    "SS34": ("C8678", "BASIC"),
+    "1N4148W": ("C81598", "BASIC"),
+    "MMBT3904": ("C20526", "BASIC"),
+    "AO3400A": ("C20917", "BASIC"),
+    "AO3401A": ("C15127", "BASIC"),
+    "LTV-817S": ("C109227", "BASIC"),
+    "SP3485EN": ("C8963", "BASIC"),
+    "PSM712": ("C32677", "BASIC"),
+    "XL1509-5.0": ("C61063", "BASIC"),
+    "AMS1117-3.3": ("C6186", "BASIC"),
+    "BOOT": ("C318884", "BASIC"),
+    "SMAJ26A": ("C2848697", "EXT"),
+    "ESP32-C3-WROOM-02": ("C2934560", "EXT"),
+    "USB-C": ("C165948", "EXT"),
+}
+LED_LCSC = ("C84256", "BASIC")  # NCD0805R1, đỏ 0805
+
+
+def lcsc_code(c: Comp) -> str:
+    if c.ref.startswith("#") or not c.footprint:
+        return ""
+    if c.lib_id == "Device:LED":
+        return LED_LCSC[0]
+    hit = LCSC_BY_VALUE.get((c.lib_id, c.value)) or LCSC_BY_PART.get(c.value)
+    return hit[0] if hit else ""
+
+
+def lcsc_class(code: str) -> str:
+    for tbl in (list(LCSC_BY_VALUE.values()), list(LCSC_BY_PART.values()), [LED_LCSC]):
+        for cc, cls in tbl:
+            if cc == code:
+                return cls
+    return ""
 
 
 def net_index_map(design: Design) -> dict[str, int]:

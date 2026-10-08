@@ -16,7 +16,7 @@ from build_connected import (  # noqa: E402
     inject_nets_into_footprint,
     pad_net_table,
 )
-from connectivity import build_logic_design  # noqa: E402
+from connectivity import USB_C_PINS, build_logic_design  # noqa: E402
 from assembly_groups import assembly_group  # noqa: E402
 from pcb_layout import (  # noqa: E402
     BOARD_H,
@@ -158,11 +158,12 @@ def place_symbol(
     pin_count: int = 8,
     pin_numbers: list[str] | None = None,
     show_value: bool = False,
+    lcsc: str = "",
 ) -> str:
     if pin_numbers is None:
-        # ESP32 has pins 1..38 contiguous; most parts 1..N
-        if "ESP32" in lib_id:
-            pin_numbers = [str(i) for i in range(1, 39)]
+        # Most parts 1..N; USB-C uses A/B row names
+        if "USB_C_Receptacle" in lib_id:
+            pin_numbers = list(USB_C_PINS)
         else:
             pin_numbers = [str(i) for i in range(1, pin_count + 1)]
     pins = [f'\t\t(pin "{n}"\n\t\t\t(uuid "{uid()}")\n\t\t)' for n in pin_numbers]
@@ -211,6 +212,15 @@ def place_symbol(
 \t\t\t)
 \t\t)
 \t\t(property "Datasheet" ""
+\t\t\t(at {x} {y} 0)
+\t\t\t(effects
+\t\t\t\t(font
+\t\t\t\t\t(size 1.27 1.27)
+\t\t\t\t)
+\t\t\t\t(hide yes)
+\t\t\t)
+\t\t)
+\t\t(property "LCSC" "{lcsc}"
 \t\t\t(at {x} {y} 0)
 \t\t\t(effects
 \t\t\t\t(font
@@ -776,12 +786,19 @@ def build_schematic() -> str:
         (SYM_DIR / "Device.kicad_sym", "L"),
         (SYM_DIR / "Device.kicad_sym", "Fuse"),
         (SYM_DIR / "Device.kicad_sym", "D_TVS"),
-        (SYM_DIR / "Transistor_FET.kicad_sym", "Q_PMOS_GSD"),
+        (SYM_DIR / "Device.kicad_sym", "D_Zener"),
+        (SYM_DIR / "Device.kicad_sym", "D_Schottky"),
+        (SYM_DIR / "Transistor_FET.kicad_sym", "AO3401A"),
         (SYM_DIR / "Transistor_FET.kicad_sym", "AO3400A"),
-        (SYM_DIR / "Transistor_BJT.kicad_sym", "2N3904"),
-        (SYM_DIR / "Interface_UART.kicad_sym", "MAX485E"),
-        (SYM_DIR / "Regulator_Linear.kicad_sym", "AMS1117-3.3"),
+        (SYM_DIR / "Transistor_BJT.kicad_sym", "MMBT3904"),
+        (SYM_DIR / "Interface_UART.kicad_sym", "MAX3485"),
         (SYM_DIR / "Regulator_Switching.kicad_sym", "XL1509-5.0"),
+        (SYM_DIR / "Regulator_Linear.kicad_sym", "AMS1117-3.3"),
+        (SYM_DIR / "RF_Module.kicad_sym", "ESP32-C3-WROOM-02"),
+        (SYM_DIR / "Relay.kicad_sym", "SANYOU_SRD_Form_C"),
+        (SYM_DIR / "Connector.kicad_sym", "USB_C_Receptacle_USB2.0_16P"),
+        (SYM_DIR / "Diode.kicad_sym", "SM712_SOT23"),
+        (SYM_DIR / "Switch.kicad_sym", "SW_Push"),
         (SYM_DIR / "power.kicad_sym", "GND"),
         (SYM_DIR / "power.kicad_sym", "+3V3"),
         (SYM_DIR / "power.kicad_sym", "+5V"),
@@ -949,6 +966,43 @@ def copper_pour_zones(board_w: float, board_h: float) -> str:
     return "\n".join(out)
 
 
+def _footprint_zones_to_board(sexpr: str, x: float, y: float, rot: float) -> str:
+    """Zones inside a board footprint use absolute board coordinates (library files use local ones)."""
+    import math as _m
+
+    a = _m.radians(rot)
+    ca, sa = _m.cos(a), _m.sin(a)
+    out = []
+    i = 0
+    while True:
+        k = sexpr.find("(zone", i)
+        if k < 0:
+            out.append(sexpr[i:])
+            break
+        depth = 0
+        j = k
+        while True:
+            ch = sexpr[j]
+            if ch == "(":
+                depth += 1
+            elif ch == ")":
+                depth -= 1
+                if depth == 0:
+                    break
+            j += 1
+        block = sexpr[k : j + 1]
+
+        def _xy(mm):
+            px, py = float(mm.group(1)), float(mm.group(2))
+            return f"(xy {round(x + px * ca + py * sa, 4)} {round(y - px * sa + py * ca, 4)})"
+
+        block = re.sub(r"\(xy (-?[\d.]+) (-?[\d.]+)\)", _xy, block)
+        out.append(sexpr[i:k])
+        out.append(block)
+        i = j + 1
+    return "".join(out)
+
+
 def build_pcb() -> str:
     """Create PCB with footprints, pad nets from schematic connectivity, starter tracks."""
     design = build_logic_design()
@@ -971,6 +1025,7 @@ def build_pcb() -> str:
         try:
             sexpr = _place_footprint_sexpr(c.footprint, p.ref, c.value, p.x, p.y, p.rot)
             sexpr = postprocess_footprint(sexpr, p.rot)
+            sexpr = _footprint_zones_to_board(sexpr, p.x, p.y, p.rot)
             sexpr = inject_nets_into_footprint(sexpr, p.ref, pad_nets)
             fp_uuid = re.search(r'^\t\t\(uuid "([^"]+)"\)', sexpr, re.M).group(1)
             fp_group_members.setdefault(assembly_group(p.ref), []).append(fp_uuid)
@@ -1069,10 +1124,10 @@ def build_pro() -> str:
                 "diff_pair_dimensions": [],
                 "drc_exclusions": [],
                 "rules": {
-                    "min_clearance": 0.2,
-                    "min_track_width": 0.25,
-                    "min_via_diameter": 0.6,
-                    "min_via_drill": 0.3,
+                    "min_clearance": 0.13,
+                    "min_track_width": 0.15,
+                    "min_via_diameter": 0.45,
+                    "min_via_drill": 0.2,
                 },
                 "track_widths": [0.0, 0.25, 0.4, 0.8, 1.5],
                 "via_dimensions": [{"diameter": 0.6, "drill": 0.3}],
@@ -1121,8 +1176,27 @@ def build_pro() -> str:
                     "via_drill": 0.4,
                     "wire_width": 6,
                 },
+                {
+                    # USB-C 16P: chân bước 0,5 mm, D+/D- xen kẽ -> dây/khe/via nhỏ (trong khả năng JLCPCB)
+                    "bus_width": 12,
+                    "clearance": 0.13,
+                    "diff_pair_gap": 0.15,
+                    "diff_pair_via_gap": 0.25,
+                    "diff_pair_width": 0.15,
+                    "line_style": 0,
+                    "microvia_diameter": 0.3,
+                    "microvia_drill": 0.1,
+                    "name": "USB",
+                    "pcb_color": "rgba(0, 0, 0, 0.000)",
+                    "schematic_color": "rgba(0, 0, 0, 0.000)",
+                    "track_width": 0.15,
+                    "via_diameter": 0.45,
+                    "via_drill": 0.2,
+                    "wire_width": 6,
+                },
             ],
             "meta": {"version": 3},
+            "netclass_patterns": [{"netclass": "USB", "pattern": "USB_*"}],
         },
         "pcbnew": {"page_layout_descr_file": ""},
         "schematic": {
@@ -1197,27 +1271,6 @@ def write_local_symbol_lib():
 
 def main():
     (ROOT / "libraries" / "Fiberboard.pretty").mkdir(parents=True, exist_ok=True)
-    (ROOT / "libraries" / "Fiberboard.pretty" / "ESP32_DevKitC_Socket.kicad_mod").write_text(
-        make_esp32_socket_footprint(), encoding="utf-8"
-    )
-    (ROOT / "libraries" / "Fiberboard.pretty" / "Fiber_Clamp_2CH.kicad_mod").write_text(
-        make_fiber_clamp_footprint(), encoding="utf-8"
-    )
-    (ROOT / "libraries" / "Fiberboard.pretty" / "Fiber_Clamp_1CH.kicad_mod").write_text(
-        make_fiber_clamp_1ch_footprint(), encoding="utf-8"
-    )
-    (ROOT / "libraries" / "Fiberboard.pretty" / "AFBR_1624Z_VL.kicad_mod").write_text(
-        make_afbr_1624z_footprint(), encoding="utf-8"
-    )
-    (ROOT / "libraries" / "Fiberboard.pretty" / "AFBR_2624Z_VL.kicad_mod").write_text(
-        make_afbr_2624z_footprint(), encoding="utf-8"
-    )
-    (ROOT / "libraries" / "Fiberboard.pretty" / "PC817_SO4.kicad_mod").write_text(
-        make_pc817_so4_footprint(), encoding="utf-8"
-    )
-    (ROOT / "libraries" / "Fiberboard.pretty" / "G6KU-2F_SMD.kicad_mod").write_text(
-        make_g6ku_2f_smd_footprint(), encoding="utf-8"
-    )
     write_local_symbol_lib()
     write_lib_tables()
 
